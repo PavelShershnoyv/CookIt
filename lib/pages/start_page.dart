@@ -1,34 +1,35 @@
 import 'package:cookit/design/colors.dart';
+import 'package:cookit/design/dimensions.dart';
 import 'package:cookit/design/images.dart';
-import 'package:flutter/material.dart';
 import 'package:cookit/widgets/recipe_card.dart';
+import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class StartPage extends StatelessWidget {
+  const StartPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
+        backgroundColor: background,
+        body: Padding(
+          padding: const EdgeInsets.only(left: padding30, right: padding30),
+          child: SafeArea(
+              child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Greeting
-              Text(
-                'С возвращением, Юлия',
-                style: const TextStyle(
+              Row(
+                children: [Text("Icon Profile")],
+              ),
+              const SizedBox(height: height16),
+              const Text(
+                "С возвращением, Юлия",
+                style: TextStyle(
                   color: subtitleColor,
                   fontSize: 20,
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              const SizedBox(height: 8),
-              // Title
-              const SizedBox(height: 16),
-              // Promo gradient card with scan action
+              const SizedBox(height: height16),
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
@@ -44,23 +45,23 @@ class HomePage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Что приготовить  сегодня?',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.black,
                           fontSize: 30,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      Text(
+                      const Text(
                         'Сканируй продукты - получи идеи',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.black,
                           fontSize: 20,
                           fontWeight: FontWeight.w400,
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: height12),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 20, vertical: 10),
@@ -72,9 +73,9 @@ class HomePage extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             // Icon(scannerImage, color: Colors.white, size: 30),
-                            scannerImage,
-                            SizedBox(width: 10),
-                            Text(
+                            Image.asset(scanImg),
+                            const SizedBox(width: 10),
+                            const Text(
                               'Сканировать',
                               style:
                                   TextStyle(color: Colors.white, fontSize: 20),
@@ -86,78 +87,44 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
-              // Categories row
-              _Categories(),
-              const SizedBox(height: 24),
-              // For you section header with filter
+              const SizedBox(height: height16),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _Category(icon: breakfastImg, label: 'Завтрак'),
+                  _Category(icon: lunchImg, label: 'Обед'),
+                  _Category(icon: dinnerImg, label: 'Ужин'),
+                  _Category(icon: dessertImg, label: 'Десерт'),
+                ],
+              ),
+              const SizedBox(height: height30),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     'Для Вас',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600),
+                    style: TextStyle(color: Colors.white, fontSize: 30),
                   ),
-                  _FilterAll(),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text('Все ',
+                          style: TextStyle(color: Colors.white, fontSize: 20)),
+                      Image.asset(arrowRightImg),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Горизонтальный список рецептов
-              const SizedBox(
-                height: 220,
-                child: _HorizontalRecipesList(),
-              ),
-              const SizedBox(height: 24),
-              // Info chips row
-              Row(
-                children: const [
-                  _InfoChip(text: 'У вас 9/10'),
-                  SizedBox(width: 8),
-                  _InfoChip(text: 'У вас 3/4'),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Bottom icons row (placeholder)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: const [
-                  _CircleIcon(icon: Icons.kitchen),
-                  _CircleIcon(icon: Icons.receipt_long),
-                  _CircleIcon(icon: Icons.favorite),
-                ],
-              ),
-              const SizedBox(height: 16),
+              const SizedBox(height: height16),
+              _HorizontalRecipesList()
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _Categories extends StatelessWidget {
-  const _Categories();
-
-  @override
-  Widget build(BuildContext context) {
-    const labelStyle = TextStyle(color: Colors.white, fontSize: 14);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        _Category(icon: Icons.free_breakfast, label: 'Завтрак'),
-        _Category(icon: Icons.ramen_dining, label: 'Обед'),
-        _Category(icon: Icons.dinner_dining, label: 'Ужин'),
-        _Category(icon: Icons.cake, label: 'Десерт'),
-      ],
-    );
+          )),
+        ));
   }
 }
 
 class _Category extends StatelessWidget {
-  final IconData icon;
+  final String icon;
   final String label;
   const _Category({required this.icon, required this.label});
 
@@ -172,32 +139,11 @@ class _Category extends StatelessWidget {
             color: const Color(0x332D2D2D),
             borderRadius: BorderRadius.circular(100),
           ),
-          child: Icon(icon, color: Colors.white),
+          child: Image.asset(icon),
         ),
         const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: Colors.white)),
+        Text(label, style: const TextStyle(color: textPrimary)),
       ],
-    );
-  }
-}
-
-class _FilterAll extends StatelessWidget {
-  const _FilterAll();
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0x19000000),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Text('Все ', style: TextStyle(color: Colors.white, fontSize: 16)),
-          Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 18),
-        ],
-      ),
     );
   }
 }
@@ -207,7 +153,6 @@ class _HorizontalRecipesList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Демонстрационные данные: количество может меняться (например, 4–20)
     const items = [
       {
         'title': 'Греческий салат',
@@ -265,41 +210,6 @@ class _HorizontalRecipesList extends StatelessWidget {
           );
         }),
       ),
-    );
-  }
-}
-
-class _InfoChip extends StatelessWidget {
-  final String text;
-  const _InfoChip({required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0E1214),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Text(text, style: const TextStyle(color: Colors.white)),
-    );
-  }
-}
-
-class _CircleIcon extends StatelessWidget {
-  final IconData icon;
-  const _CircleIcon({required this.icon});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 60,
-      height: 60,
-      decoration: BoxDecoration(
-        color: const Color(0x332D2D2D),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Icon(icon, color: Colors.white),
     );
   }
 }
