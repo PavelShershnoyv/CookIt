@@ -57,7 +57,7 @@ class RecipesPage extends StatelessWidget {
         selectedIndex: 1,
         onTap: (index) {
           if (index == 0) {
-            context.go('/fridge');
+            context.go('/home');
           } else if (index == 1) {
             // already on recipes
           } else if (index == 2) {

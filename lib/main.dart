@@ -20,9 +20,12 @@ class MyApp extends StatelessWidget {
       routes: [
         GoRoute(path: '/', builder: (context, state) => const StartPage()),
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
-        GoRoute(path: '/recipes', builder: (context, state) => const RecipesPage()),
-        GoRoute(path: '/scanner', builder: (context, state) => const ScannerPage()),
-        GoRoute(path: '/fridge', builder: (context, state) => const FridgePage()),
+        GoRoute(
+            path: '/recipes', builder: (context, state) => const RecipesPage()),
+        GoRoute(
+            path: '/scanner', builder: (context, state) => const ScannerPage()),
+        GoRoute(
+            path: '/fridge', builder: (context, state) => const FridgePage()),
       ],
       initialLocation: '/',
     );

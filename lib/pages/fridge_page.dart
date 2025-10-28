@@ -19,6 +19,8 @@ class FridgePage extends StatelessWidget {
               _Title(),
               SizedBox(height: 12),
               _FiltersRow(),
+              SizedBox(height: 16),
+              _SearchField(),
               SizedBox(height: 24),
               _ItemsGrid(),
             ],
@@ -75,8 +77,6 @@ class _FiltersRow extends StatelessWidget {
           _FilterChip(label: 'Овощи'),
           SizedBox(width: 8),
           _FilterChip(label: 'Молочное'),
-          SizedBox(width: 12),
-          _SearchField(),
         ],
       ),
     );
@@ -115,13 +115,13 @@ class _SearchField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0x1F000000),
         borderRadius: BorderRadius.circular(100),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: const [
           Icon(Icons.search, color: Color(0x80FFFFFF)),
           SizedBox(width: 8),
@@ -155,11 +155,17 @@ class _ItemsGrid extends StatelessWidget {
 
     return Column(
       children: [
-        _ItemRow(left: items[0], right: items[1]),
+        items[0],
         const SizedBox(height: 12),
-        _ItemRow(left: items[2], right: items[3]),
+        items[1],
         const SizedBox(height: 12),
-        _ItemRow(left: items[4], right: items[5]),
+        items[2],
+        const SizedBox(height: 12),
+        items[3],
+        const SizedBox(height: 12),
+        items[4],
+        const SizedBox(height: 12),
+        items[5],
       ],
     );
   }
@@ -247,19 +253,15 @@ class _PlusButton extends StatelessWidget {
     return Container(
       width: 40,
       height: 40,
-      decoration: BoxDecoration(
-        color: const Color(0x33B3F800),
+      decoration: const BoxDecoration(
+        color: Color(0xFFB3F800),
         shape: BoxShape.circle,
-        border: Border.all(color: const Color(0xFFB3F800)),
       ),
       child: const Center(
-        child: Text(
-          '+',
-          style: TextStyle(
-            color: Color(0xFFB3F800),
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-          ),
+        child: Icon(
+          Icons.add,
+          color: Colors.black,
+          size: 22,
         ),
       ),
     );
