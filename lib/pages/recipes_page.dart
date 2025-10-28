@@ -57,7 +57,7 @@ class RecipesPage extends StatelessWidget {
         selectedIndex: 1,
         onTap: (index) {
           if (index == 0) {
-            context.go('/home');
+            context.go('/fridge');
           } else if (index == 1) {
             // already on recipes
           } else if (index == 2) {
@@ -72,15 +72,21 @@ class RecipesPage extends StatelessWidget {
 class _Filters extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: const [
-        _FilterChip(label: 'Все', selected: true),
-        _FilterChip(label: 'Завтрак'),
-        _FilterChip(label: 'Обед'),
-        _FilterChip(label: 'Ужин'),
-        _FilterChip(label: 'Десерт'),
-      ],
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: const [
+          _FilterChip(label: 'Все', selected: true),
+          SizedBox(width: 12),
+          _FilterChip(label: 'Завтрак'),
+          SizedBox(width: 12),
+          _FilterChip(label: 'Обед'),
+          SizedBox(width: 12),
+          _FilterChip(label: 'Ужин'),
+          SizedBox(width: 12),
+          _FilterChip(label: 'Десерт'),
+        ],
+      ),
     );
   }
 }

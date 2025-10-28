@@ -6,6 +6,7 @@ import 'pages/home_page.dart';
 import 'pages/recipes_page.dart';
 import 'pages/scanner_page.dart';
 import 'pages/fridge_page.dart';
+import 'pages/validation_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +27,8 @@ class MyApp extends StatelessWidget {
             path: '/scanner', builder: (context, state) => const ScannerPage()),
         GoRoute(
             path: '/fridge', builder: (context, state) => const FridgePage()),
+        GoRoute(
+            path: '/validation', builder: (context, state) => const ValidationPage()),
       ],
       initialLocation: '/',
     );
