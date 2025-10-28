@@ -25,7 +25,7 @@ class ScannerPage extends StatelessWidget {
         selectedIndex: 2,
         onTap: (index) {
           if (index == 0) {
-            context.go('/home');
+            context.go('/fridge');
           } else if (index == 1) {
             context.go('/recipes');
           } else if (index == 2) {

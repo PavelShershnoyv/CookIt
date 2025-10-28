@@ -3,6 +3,7 @@ import 'package:cookit/widgets/nav_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:cookit/widgets/recipe_card.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cookit/design/images.dart';
 
 class RecipesPage extends StatelessWidget {
   const RecipesPage({super.key});
@@ -26,8 +27,14 @@ class RecipesPage extends StatelessWidget {
                   fontWeight: FontWeight.w400,
                 ),
               ),
-              const SizedBox(height: 8),
-              // Subtitle
+              const SizedBox(height: 12),
+              // Filters row (перемещено под заголовок)
+              _Filters(),
+              const SizedBox(height: 16),
+              // Промо-карточка рецепта (как в макете)
+              const _FeaturedRecipeCard(),
+              const SizedBox(height: 24),
+              // Subtitle (перемещено ниже промо-карточки)
               const Text(
                 '10 доступных рецептов',
                 style: TextStyle(
@@ -37,21 +44,10 @@ class RecipesPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 24),
-              // Filters row
-              _Filters(),
-              const SizedBox(height: 24),
               // Recipe grid 2 x 3
               _RecipeGrid(),
               const SizedBox(height: 24),
               // Info chips
-              Row(
-                children: const [
-                  _InfoChip(text: 'У вас 8/10'),
-                  SizedBox(width: 8),
-                  _InfoChip(text: 'У вас 3/4'),
-                ],
-              ),
-              const SizedBox(height: 32),
             ],
           ),
         ),
@@ -61,7 +57,7 @@ class RecipesPage extends StatelessWidget {
         selectedIndex: 1,
         onTap: (index) {
           if (index == 0) {
-            context.go('/home');
+            context.go('/fridge');
           } else if (index == 1) {
             // already on recipes
           } else if (index == 2) {
@@ -110,6 +106,85 @@ class _FilterChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: decoration,
       child: Text(label, style: TextStyle(color: textColor, fontSize: 18)),
+    );
+  }
+}
+
+class _FeaturedRecipeCard extends StatelessWidget {
+  const _FeaturedRecipeCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0x1F000000),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          // Left side: text and button
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Паста фузилли',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  '200 ккал на 100 г',
+                  style: TextStyle(
+                    color: Color(0xFFBBBCBC),
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Show button
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFB3F800),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: const Text(
+                    'Показать',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          // Right side: image placeholder (using dinner icon)
+          Container(
+            width: 140,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0x332D2D2D),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Center(
+              child: Image.asset(
+                dinnerImg,
+                width: 100,
+                height: 100,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -199,6 +274,32 @@ class _InfoChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(text, style: const TextStyle(color: Colors.white)),
+    );
+  }
+}
+
+class _Category extends StatelessWidget {
+  final String icon;
+  final String label;
+  const _Category({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            color: const Color(0x332D2D2D),
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: Image.asset(icon),
+        ),
+        const SizedBox(height: 8),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(color: Colors.white)),
+      ],
     );
   }
 }

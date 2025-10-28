@@ -126,7 +126,7 @@ class StartPage extends StatelessWidget {
           selectedIndex: 1,
           onTap: (index) {
             if (index == 0) {
-              context.go('/home');
+              context.go('/fridge');
             } else if (index == 1) {
               context.go('/recipes');
             } else if (index == 2) {

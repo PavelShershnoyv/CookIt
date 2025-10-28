@@ -1,9 +1,11 @@
 import 'package:cookit/pages/start_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'pages/home_page.dart';
 import 'pages/recipes_page.dart';
 import 'pages/scanner_page.dart';
+import 'pages/fridge_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +22,7 @@ class MyApp extends StatelessWidget {
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
         GoRoute(path: '/recipes', builder: (context, state) => const RecipesPage()),
         GoRoute(path: '/scanner', builder: (context, state) => const ScannerPage()),
+        GoRoute(path: '/fridge', builder: (context, state) => const FridgePage()),
       ],
       initialLocation: '/',
     );
@@ -27,11 +30,19 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Cooking App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF121212),
-        useMaterial3: true,
-      ),
+      // Базовая тема + Montserrat для всего проекта
+      theme: (() {
+        final base = ThemeData(
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF121212),
+          useMaterial3: true,
+        );
+        return base.copyWith(
+          textTheme: GoogleFonts.montserratTextTheme(base.textTheme),
+          primaryTextTheme:
+              GoogleFonts.montserratTextTheme(base.primaryTextTheme),
+        );
+      })(),
       routerConfig: router,
     );
   }
