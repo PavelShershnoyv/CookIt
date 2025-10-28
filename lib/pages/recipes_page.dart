@@ -1,7 +1,8 @@
 import 'package:cookit/design/colors.dart';
-import 'package:cookit/design/images.dart';
+import 'package:cookit/widgets/nav_panel.dart';
 import 'package:flutter/material.dart';
 import 'package:cookit/widgets/recipe_card.dart';
+import 'package:go_router/go_router.dart';
 
 class RecipesPage extends StatelessWidget {
   const RecipesPage({super.key});
@@ -56,7 +57,18 @@ class RecipesPage extends StatelessWidget {
         ),
       ),
       // Bottom navigation (styled pill)
-      bottomNavigationBar: const _BottomNav(),
+      bottomNavigationBar: NavPanel(
+        selectedIndex: 1,
+        onTap: (index) {
+          if (index == 0) {
+            context.go('/home');
+          } else if (index == 1) {
+            // already on recipes
+          } else if (index == 2) {
+            context.go('/scanner');
+          }
+        },
+      ),
     );
   }
 }
@@ -187,64 +199,6 @@ class _InfoChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(text, style: const TextStyle(color: Colors.white)),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  const _BottomNav();
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0x1A000000),
-          borderRadius: BorderRadius.circular(100),
-          boxShadow: const [
-            BoxShadow(
-              color: Color(0x33000000),
-              blurRadius: 20,
-              offset: Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _NavItem(icon: fridgeImage, label: 'Холодильник'),
-            _NavItem(icon: recipesImage, label: 'Рецепты', selected: true),
-            _NavItem(icon: scannerImage, label: 'Сканер'),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _NavItem extends StatelessWidget {
-  final Widget icon;
-  final String label;
-  final bool selected;
-  const _NavItem(
-      {required this.icon, required this.label, this.selected = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(width: 28, height: 28, child: icon),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : const Color(0xFFBBBCBC),
-            fontSize: 12,
-          ),
-        ),
-      ],
     );
   }
 }

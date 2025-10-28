@@ -2,7 +2,9 @@ import 'package:cookit/design/colors.dart';
 import 'package:cookit/design/dimensions.dart';
 import 'package:cookit/design/images.dart';
 import 'package:cookit/widgets/recipe_card.dart';
+import 'package:cookit/widgets/nav_panel.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class StartPage extends StatelessWidget {
   const StartPage({super.key});
@@ -119,6 +121,18 @@ class StartPage extends StatelessWidget {
               _HorizontalRecipesList()
             ],
           )),
+        ),
+        bottomNavigationBar: NavPanel(
+          selectedIndex: 1,
+          onTap: (index) {
+            if (index == 0) {
+              context.go('/home');
+            } else if (index == 1) {
+              context.go('/recipes');
+            } else if (index == 2) {
+              context.go('/scanner');
+            }
+          },
         ));
   }
 }

@@ -1,7 +1,9 @@
 import 'package:cookit/pages/start_page.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'pages/home_page.dart';
 import 'pages/recipes_page.dart';
+import 'pages/scanner_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -10,10 +12,19 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    final router = GoRouter(
+      routes: [
+        GoRoute(path: '/', builder: (context, state) => const StartPage()),
+        GoRoute(path: '/home', builder: (context, state) => const HomePage()),
+        GoRoute(path: '/recipes', builder: (context, state) => const RecipesPage()),
+        GoRoute(path: '/scanner', builder: (context, state) => const ScannerPage()),
+      ],
+      initialLocation: '/',
+    );
+
+    return MaterialApp.router(
       title: 'Cooking App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -21,7 +32,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: const Color(0xFF121212),
         useMaterial3: true,
       ),
-      home: const StartPage(),
+      routerConfig: router,
     );
   }
 }

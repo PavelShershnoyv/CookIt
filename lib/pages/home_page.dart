@@ -2,6 +2,8 @@ import 'package:cookit/design/colors.dart';
 import 'package:cookit/design/images.dart';
 import 'package:flutter/material.dart';
 import 'package:cookit/widgets/recipe_card.dart';
+import 'package:cookit/widgets/nav_panel.dart';
+import 'package:go_router/go_router.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -133,6 +135,18 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      bottomNavigationBar: NavPanel(
+        selectedIndex: 0,
+        onTap: (index) {
+          if (index == 0) {
+            context.go('/home');
+          } else if (index == 1) {
+            context.go('/recipes');
+          } else if (index == 2) {
+            context.go('/scanner');
+          }
+        },
       ),
     );
   }
