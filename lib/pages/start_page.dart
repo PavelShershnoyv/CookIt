@@ -14,113 +14,144 @@ class StartPage extends StatelessWidget {
     return Scaffold(
         backgroundColor: background,
         body: Padding(
-          padding: const EdgeInsets.only(left: padding30, right: padding30),
+          padding: const EdgeInsets.only(
+              top: padding30, left: padding30, right: padding30),
           child: SafeArea(
-              child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [Text("Icon Profile")],
-              ),
-              const SizedBox(height: height16),
-              const Text(
-                "С возвращением, Юлия",
-                style: TextStyle(
-                  color: subtitleColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-              const SizedBox(height: height16),
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [gradientStart, gradientEnd],
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Что приготовить  сегодня?',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 30,
-                          fontWeight: FontWeight.w400,
+            child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Аватар пользователя
+                        const CircleAvatar(
+                          radius: 28,
+                          backgroundColor: Color(0x332D2D2D),
+                          backgroundImage:
+                              AssetImage('assets/images/avatar.png'),
                         ),
+                        // Иконка избранного в круглой тёмной кнопке
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF292E31),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Image.asset(
+                              'assets/images/heart.png',
+                              width: 28,
+                              height: 28,
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: height16),
+                    const Text(
+                      "С возвращением, Юлия",
+                      style: TextStyle(
+                        color: subtitleColor,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w400,
                       ),
-                      const Text(
-                        'Сканируй продукты - получи идеи',
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w400,
+                    ),
+                    const SizedBox(height: height16),
+                    Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [gradientStart, gradientEnd],
                         ),
+                        borderRadius: BorderRadius.circular(30),
                       ),
-                      const SizedBox(height: height12),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0x69000000),
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Icon(scannerImage, color: Colors.white, size: 30),
-                            Image.asset(scanImg),
-                            const SizedBox(width: 10),
                             const Text(
-                              'Сканировать',
-                              style:
-                                  TextStyle(color: Colors.white, fontSize: 20),
-                            )
+                              'Что приготовить  сегодня?',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 30,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const Text(
+                              'Сканируй продукты - получи идеи',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 20,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                            const SizedBox(height: height12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0x69000000),
+                                borderRadius: BorderRadius.circular(30),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Icon(scannerImage, color: Colors.white, size: 30),
+                                  Image.asset(scanImg),
+                                  const SizedBox(width: 10),
+                                  const Text(
+                                    'Сканировать',
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 20),
+                                  )
+                                ],
+                              ),
+                            ),
                           ],
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: height16),
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _Category(icon: breakfastImg, label: 'Завтрак'),
-                  _Category(icon: lunchImg, label: 'Обед'),
-                  _Category(icon: dinnerImg, label: 'Ужин'),
-                  _Category(icon: dessertImg, label: 'Десерт'),
-                ],
-              ),
-              const SizedBox(height: height30),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Для Вас',
-                    style: TextStyle(color: Colors.white, fontSize: 30),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Text('Все ',
-                          style: TextStyle(color: Colors.white, fontSize: 20)),
-                      Image.asset(arrowRightImg),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: height16),
-              _HorizontalRecipesList()
-            ],
-          )),
+                    ),
+                    const SizedBox(height: height16),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _Category(icon: breakfastImg, label: 'Завтрак'),
+                        _Category(icon: lunchImg, label: 'Обед'),
+                        _Category(icon: dinnerImg, label: 'Ужин'),
+                        _Category(icon: dessertImg, label: 'Десерт'),
+                      ],
+                    ),
+                    const SizedBox(height: height30),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Для Вас',
+                          style: TextStyle(color: Colors.white, fontSize: 30),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text('Все ',
+                                style: TextStyle(
+                                    color: Colors.white, fontSize: 20)),
+                            Image.asset(arrowRightImg),
+                          ],
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: height16),
+                    _HorizontalRecipesList()
+                  ],
+                )),
+          ),
         ),
         bottomNavigationBar: NavPanel(
           selectedIndex: 1,
