@@ -94,25 +94,29 @@ class StartPage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: height12),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 20, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0x69000000),
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Icon(scannerImage, color: Colors.white, size: 30),
-                                  Image.asset(scanImg),
-                                  const SizedBox(width: 10),
-                                  const Text(
-                                    'Сканировать',
-                                    style: TextStyle(
-                                        color: Colors.white, fontSize: 20),
-                                  )
-                                ],
+                            GestureDetector(
+                              onTap: () => context.go('/scanner'),
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: const Color(0x69000000),
+                                  borderRadius: BorderRadius.circular(30),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Icon(scannerImage, color: Colors.white, size: 30),
+                                    Image.asset(scanImg),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      'Сканировать',
+                                      style: TextStyle(
+                                          color: Colors.white, fontSize: 20),
+                                    )
+                                  ],
+                                ),
                               ),
                             ),
                           ],
