@@ -154,7 +154,7 @@ class StartPage extends StatelessWidget {
           ),
         ),
         bottomNavigationBar: NavPanel(
-          selectedIndex: 1,
+          selectedIndex: -1,
           onTap: (index) {
             if (index == 0) {
               context.go('/fridge');
