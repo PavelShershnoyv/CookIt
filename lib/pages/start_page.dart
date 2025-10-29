@@ -201,6 +201,7 @@ class _HorizontalRecipesList extends StatelessWidget {
   Widget build(BuildContext context) {
     const items = [
       {
+        'img': 'assets/images/salat.png',
         'title': 'Греческий салат',
         'time': '15 мин',
         'color': Color(0xFF6E8B3D),
@@ -251,13 +252,14 @@ class _HorizontalRecipesList extends StatelessWidget {
                 ingredientsOwned: item['own'] as int,
                 ingredientsTotal: item['total'] as int,
                 favorite: item['fav'] as bool,
+                imageAsset: item['img'] as String?,
                 onTap: () {
                   final title = item['title'] as String;
                   final fav = item['fav'] as bool;
                   final extras = {
                     'title': title,
                     'nutrition': _nutritionFor(title),
-                    'imageAsset': 'assets/images/recipes.png',
+                    'imageAsset': (item['img'] as String?) ?? 'assets/images/recipes.png',
                     'favorite': fav,
                     'ingredients': _ingredientsFor(title),
                   };

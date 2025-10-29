@@ -208,11 +208,12 @@ class _RecipeGrid extends StatelessWidget {
             ingredientsOwned: 8,
             ingredientsTotal: 10,
             favorite: true,
+            imageAsset: 'assets/images/salat.png',
             onTap: () {
               final extras = {
                 'title': 'Греческий салат',
                 'nutrition': '120 ккал на 100 г',
-                'imageAsset': 'assets/images/recipes.png',
+                'imageAsset': 'assets/images/salat.png',
                 'favorite': true,
                 'ingredients': const [
                   Ingredient(
@@ -290,11 +291,12 @@ class _RecipeGrid extends StatelessWidget {
             time: '15 мин',
             ingredientsOwned: 8,
             ingredientsTotal: 10,
+            imageAsset: 'assets/images/salat.png',
             onTap: () {
               final extras = {
                 'title': 'Греческий салат',
                 'nutrition': '120 ккал на 100 г',
-                'imageAsset': 'assets/images/recipes.png',
+                'imageAsset': 'assets/images/salat.png',
                 'favorite': false,
                 'ingredients': const [
                   Ingredient(
@@ -346,11 +348,12 @@ class _RecipeGrid extends StatelessWidget {
             time: '15 мин',
             ingredientsOwned: 8,
             ingredientsTotal: 10,
+            imageAsset: 'assets/images/salat.png',
             onTap: () {
               final extras = {
                 'title': 'Греческий салат',
                 'nutrition': '120 ккал на 100 г',
-                'imageAsset': 'assets/images/recipes.png',
+                'imageAsset': 'assets/images/salat.png',
                 'favorite': false,
                 'ingredients': const [
                   Ingredient(
