@@ -8,6 +8,7 @@ class RecipeCard extends StatelessWidget {
   final int ingredientsOwned;
   final int ingredientsTotal;
   final bool favorite;
+  final VoidCallback? onTap;
 
   const RecipeCard({
     super.key,
@@ -16,11 +17,15 @@ class RecipeCard extends StatelessWidget {
     required this.ingredientsOwned,
     required this.ingredientsTotal,
     this.favorite = false,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Stack(
@@ -102,6 +107,7 @@ class RecipeCard extends StatelessWidget {
           ),
         ),
       ],
+      ),
     );
   }
 }

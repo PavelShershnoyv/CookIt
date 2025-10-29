@@ -60,13 +60,18 @@ class RecipeInfo extends StatelessWidget {
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: favorite ? gradientStart : const Color(0x332D2D2D),
+                    color: const Color(0xFF292E31),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
-                    Icons.favorite,
-                    color: favorite ? Colors.black : Colors.white,
-                    size: 20,
+                  child: Center(
+                    child: Image.asset(
+                      favorite
+                          ? 'assets/images/heart_green.png'
+                          : 'assets/images/heart.png',
+                      width: 20,
+                      height: 20,
+                      fit: BoxFit.contain,
+                    ),
                   ),
                 ),
               ),

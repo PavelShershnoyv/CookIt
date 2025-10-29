@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:cookit/widgets/recipe_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cookit/design/images.dart';
+import 'package:cookit/widgets/recipe_info.dart';
 
 class RecipesPage extends StatelessWidget {
   const RecipesPage({super.key});
@@ -199,7 +200,7 @@ class _RecipeGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      children: const [
+      children: [
         _RecipeRow(
           left: RecipeCard(
             title: 'Греческий салат',
@@ -207,42 +208,164 @@ class _RecipeGrid extends StatelessWidget {
             ingredientsOwned: 8,
             ingredientsTotal: 10,
             favorite: true,
+            onTap: () {
+              final extras = {
+                'title': 'Греческий салат',
+                'nutrition': '120 ккал на 100 г',
+                'imageAsset': 'assets/images/recipes.png',
+                'favorite': true,
+                'ingredients': const [
+                  Ingredient(
+                      name: 'Помидоры',
+                      amount: '2 шт',
+                      icon: Icons.local_florist),
+                  Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
+                  Ingredient(
+                      name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
+                  Ingredient(
+                      name: 'Оливки', amount: '50 г', icon: Icons.circle),
+                ],
+              };
+              context.push('/recipe', extra: extras);
+            },
           ),
           right: RecipeCard(
             title: 'Жаренная курица',
             time: '25 мин',
             ingredientsOwned: 3,
             ingredientsTotal: 4,
+            onTap: () {
+              final extras = {
+                'title': 'Жаренная курица',
+                'nutrition': '165 ккал на 100 г',
+                'imageAsset': 'assets/images/recipes.png',
+                'favorite': false,
+                'ingredients': const [
+                  Ingredient(
+                      name: 'Куриное филе',
+                      amount: '300 г',
+                      icon: Icons.set_meal),
+                  Ingredient(
+                      name: 'Масло',
+                      amount: '1 ст.л.',
+                      icon: Icons.invert_colors),
+                  Ingredient(
+                      name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
+                ],
+              };
+              context.push('/recipe', extra: extras);
+            },
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         _RecipeRow(
           left: RecipeCard(
             title: 'Паста фузилли',
             time: '20 мин',
             ingredientsOwned: 6,
             ingredientsTotal: 9,
+            onTap: () {
+              final extras = {
+                'title': 'Паста фузилли',
+                'nutrition': '200 ккал на 100 г',
+                'imageAsset': 'assets/images/recipes.png',
+                'favorite': false,
+                'ingredients': const [
+                  Ingredient(
+                      name: 'Паста фузилли',
+                      amount: '200 г',
+                      icon: Icons.ramen_dining),
+                  Ingredient(
+                      name: 'Сливки',
+                      amount: '100 мл',
+                      icon: Icons.local_drink),
+                  Ingredient(name: 'Сыр', amount: '50 г', icon: Icons.icecream),
+                ],
+              };
+              context.push('/recipe', extra: extras);
+            },
           ),
           right: RecipeCard(
             title: 'Греческий салат',
             time: '15 мин',
             ingredientsOwned: 8,
             ingredientsTotal: 10,
+            onTap: () {
+              final extras = {
+                'title': 'Греческий салат',
+                'nutrition': '120 ккал на 100 г',
+                'imageAsset': 'assets/images/recipes.png',
+                'favorite': false,
+                'ingredients': const [
+                  Ingredient(
+                      name: 'Помидоры',
+                      amount: '2 шт',
+                      icon: Icons.local_florist),
+                  Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
+                  Ingredient(
+                      name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
+                  Ingredient(
+                      name: 'Оливки', amount: '50 г', icon: Icons.circle),
+                ],
+              };
+              context.push('/recipe', extra: extras);
+            },
           ),
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         _RecipeRow(
           left: RecipeCard(
             title: 'Жаренная курица',
             time: '25 мин',
             ingredientsOwned: 2,
             ingredientsTotal: 5,
+            onTap: () {
+              final extras = {
+                'title': 'Жаренная курица',
+                'nutrition': '165 ккал на 100 г',
+                'imageAsset': 'assets/images/recipes.png',
+                'favorite': false,
+                'ingredients': const [
+                  Ingredient(
+                      name: 'Куриное филе',
+                      amount: '300 г',
+                      icon: Icons.set_meal),
+                  Ingredient(
+                      name: 'Масло',
+                      amount: '1 ст.л.',
+                      icon: Icons.invert_colors),
+                  Ingredient(
+                      name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
+                ],
+              };
+              context.push('/recipe', extra: extras);
+            },
           ),
           right: RecipeCard(
             title: 'Греческий салат',
             time: '15 мин',
             ingredientsOwned: 8,
             ingredientsTotal: 10,
+            onTap: () {
+              final extras = {
+                'title': 'Греческий салат',
+                'nutrition': '120 ккал на 100 г',
+                'imageAsset': 'assets/images/recipes.png',
+                'favorite': false,
+                'ingredients': const [
+                  Ingredient(
+                      name: 'Помидоры',
+                      amount: '2 шт',
+                      icon: Icons.local_florist),
+                  Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
+                  Ingredient(
+                      name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
+                  Ingredient(
+                      name: 'Оливки', amount: '50 г', icon: Icons.circle),
+                ],
+              };
+              context.push('/recipe', extra: extras);
+            },
           ),
         ),
       ],

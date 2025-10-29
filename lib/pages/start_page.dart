@@ -3,6 +3,7 @@ import 'package:cookit/design/dimensions.dart';
 import 'package:cookit/design/images.dart';
 import 'package:cookit/widgets/recipe_card.dart';
 import 'package:cookit/widgets/nav_panel.dart';
+import 'package:cookit/widgets/recipe_info.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -250,11 +251,73 @@ class _HorizontalRecipesList extends StatelessWidget {
                 ingredientsOwned: item['own'] as int,
                 ingredientsTotal: item['total'] as int,
                 favorite: item['fav'] as bool,
+                onTap: () {
+                  final title = item['title'] as String;
+                  final fav = item['fav'] as bool;
+                  final extras = {
+                    'title': title,
+                    'nutrition': _nutritionFor(title),
+                    'imageAsset': 'assets/images/recipes.png',
+                    'favorite': fav,
+                    'ingredients': _ingredientsFor(title),
+                  };
+                  context.push('/recipe', extra: extras);
+                },
               ),
             ),
           );
         }),
       ),
     );
+  }
+
+  static String _nutritionFor(String title) {
+    switch (title) {
+      case 'Греческий салат':
+        return '120 ккал на 100 г';
+      case 'Жаренная курица':
+        return '165 ккал на 100 г';
+      case 'Паста фузилли':
+        return '200 ккал на 100 г';
+      case 'Салат боул':
+        return '180 ккал на 100 г';
+      default:
+        return '200 ккал на 100 г';
+    }
+  }
+
+  static List<Ingredient> _ingredientsFor(String title) {
+    switch (title) {
+      case 'Греческий салат':
+        return const [
+          Ingredient(name: 'Помидоры', amount: '2 шт', icon: Icons.local_florist),
+          Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
+          Ingredient(name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
+          Ingredient(name: 'Оливки', amount: '50 г', icon: Icons.circle),
+        ];
+      case 'Жаренная курица':
+        return const [
+          Ingredient(name: 'Куриное филе', amount: '300 г', icon: Icons.set_meal),
+          Ingredient(name: 'Масло', amount: '1 ст.л.', icon: Icons.invert_colors),
+          Ingredient(name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
+        ];
+      case 'Паста фузилли':
+        return const [
+          Ingredient(name: 'Паста фузилли', amount: '200 г', icon: Icons.ramen_dining),
+          Ingredient(name: 'Сливки', amount: '100 мл', icon: Icons.local_drink),
+          Ingredient(name: 'Сыр', amount: '50 г', icon: Icons.icecream),
+        ];
+      case 'Салат боул':
+        return const [
+          Ingredient(name: 'Киноа', amount: '100 г', icon: Icons.grass),
+          Ingredient(name: 'Авокадо', amount: '1 шт', icon: Icons.spa),
+          Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
+        ];
+      default:
+        return const [
+          Ingredient(name: 'Соль', amount: 'по вкусу'),
+          Ingredient(name: 'Перец', amount: 'по вкусу'),
+        ];
+    }
   }
 }
