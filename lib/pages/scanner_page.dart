@@ -30,7 +30,14 @@ class _ScannerPageState extends State<ScannerPage> {
     try {
       final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
       if (!mounted) return;
-      setState(() => _captured = photo);
+      // Если фото сделано — сохраняем и переходим на страницу валидации
+      if (photo != null) {
+        setState(() => _captured = photo);
+        // Переход на страницу валидации сразу после съёмки
+        context.go('/validation');
+        return;
+      }
+      // Если пользователь отменил — просто остаёмся на странице
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

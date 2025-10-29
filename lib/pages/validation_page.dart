@@ -38,7 +38,7 @@ class _ValidationPageState extends State<ValidationPage> {
                   fit: StackFit.expand,
                   children: [
                     Image.asset(
-                      'assets/images/fridge.png',
+                      'assets/images/validation.png',
                       fit: BoxFit.cover,
                     ),
                     Positioned.fill(
