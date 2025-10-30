@@ -1,6 +1,7 @@
 import 'package:cookit/pages/start_page.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'pages/home_page.dart';
 import 'pages/recipes_page.dart';
@@ -10,6 +11,15 @@ import 'pages/validation_page.dart';
 import 'pages/recipe_info_page.dart';
 
 void main() {
+  // Прячем системные панели (статус-бар и навигацию) и оставляем жест для показа
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  // Делаем статус-бар прозрачным, чтобы контент мог идти под него
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.black,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
   runApp(const MyApp());
 }
 

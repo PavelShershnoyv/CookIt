@@ -9,18 +9,13 @@ class ValidationPage extends StatefulWidget {
 }
 
 class _ValidationPageState extends State<ValidationPage> {
-  final List<_Item> _items = [
-    _Item('Яйцо', Icons.egg, 7),
-    _Item('Молоко', Icons.local_drink, 1),
-    _Item('Оливковое масло', Icons.invert_colors, 1),
-    _Item('Лимон', Icons.emoji_food_beverage, 5),
-    _Item('Яблоко', Icons.apple, 7),
+  final List<_Item> _items = const [
+    _Item('Яйцо', Icons.egg),
+    _Item('Молоко', Icons.local_drink),
+    _Item('Оливковое масло', Icons.invert_colors),
+    _Item('Лимон', Icons.emoji_food_beverage),
+    _Item('Яблоко', Icons.apple),
   ];
-
-  void _inc(int index) => setState(() => _items[index].count++);
-  void _dec(int index) => setState(() {
-        if (_items[index].count > 0) _items[index].count--;
-      });
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +62,7 @@ class _ValidationPageState extends State<ValidationPage> {
                   children: [
                     const SizedBox(height: 8),
                     const Text(
-                      'Валидация',
+                      'Проверка',
                       style: TextStyle(
                         color: textPrimary,
                         fontSize: 40,
@@ -90,40 +85,9 @@ class _ValidationPageState extends State<ValidationPage> {
                       _ValidationRow(
                         title: _items[i].name,
                         icon: _items[i].icon,
-                        count: _items[i].count,
-                        onMinus: () => _dec(i),
-                        onPlus: () => _inc(i),
                       ),
                       const SizedBox(height: 12),
                     ],
-
-                    // Кнопка "Добавить продукт"
-                    GestureDetector(
-                      onTap: () {},
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0x1F000000),
-                          borderRadius: BorderRadius.circular(100),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: const [
-                            Icon(Icons.add, color: Colors.white),
-                            SizedBox(width: 8),
-                            Text(
-                              'Добавить продукт',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: 16),
 
                     // Нижняя панель действий
@@ -163,16 +127,11 @@ class _ValidationPageState extends State<ValidationPage> {
 class _ValidationRow extends StatelessWidget {
   final String title;
   final IconData icon;
-  final int count;
-  final VoidCallback onMinus;
-  final VoidCallback onPlus;
+  
 
   const _ValidationRow({
     required this.title,
     required this.icon,
-    required this.count,
-    required this.onMinus,
-    required this.onPlus,
   });
 
   @override
@@ -205,62 +164,13 @@ class _ValidationRow extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 8),
-          _CircleButton(label: '-', onTap: onMinus, filled: false),
-          const SizedBox(width: 8),
-          Text(
-            '$count',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(width: 8),
-          _CircleButton(label: '+', onTap: onPlus, filled: true),
         ],
       ),
     );
   }
 }
 
-class _CircleButton extends StatelessWidget {
-  final String label;
-  final bool filled;
-  final VoidCallback onTap;
-  const _CircleButton({
-    required this.label,
-    required this.onTap,
-    this.filled = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final bg = filled ? const Color(0xFFB3F800) : const Color(0x1F000000);
-    final fg = filled ? Colors.black : Colors.white;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: bg,
-          shape: BoxShape.circle,
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: fg,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
+// Кнопки управления количеством продуктов в макете отсутствуют.
 
 class _ActionButton extends StatelessWidget {
   final String label;
@@ -302,6 +212,5 @@ class _ActionButton extends StatelessWidget {
 class _Item {
   final String name;
   final IconData icon;
-  int count;
-  _Item(this.name, this.icon, this.count);
+  const _Item(this.name, this.icon);
 }

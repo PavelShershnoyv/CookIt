@@ -74,6 +74,14 @@ class _RecipeInfoPageState extends State<RecipeInfoPage> {
                 isFavorite = !isFavorite;
               });
             },
+            onStartCooking: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Начинаем готовить!'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
           ),
         ),
       ),

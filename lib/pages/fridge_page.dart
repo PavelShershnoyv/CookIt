@@ -15,13 +15,13 @@ class FridgePage extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              _Title(),
-              SizedBox(height: 12),
-              _FiltersRow(),
-              SizedBox(height: 16),
-              _SearchField(),
-              SizedBox(height: 24),
+            children: [
+              const _Title(),
+              const SizedBox(height: 12),
+              const _FiltersRow(),
+              const SizedBox(height: 16),
+              const _SearchField(),
+              const SizedBox(height: 24),
               _ItemsGrid(),
             ],
           ),
@@ -139,35 +139,65 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-class _ItemsGrid extends StatelessWidget {
+class _ItemData {
+  final String title;
+  final String amount;
+  final IconData icon;
+  const _ItemData(
+      {required this.title, required this.amount, required this.icon});
+}
+
+class _ItemsGrid extends StatefulWidget {
   const _ItemsGrid();
 
   @override
-  Widget build(BuildContext context) {
-    final items = [
-      const _FridgeItem(title: 'Молоко', amount: '1 л', icon: Icons.local_drink),
-      const _FridgeItem(title: 'Оливковое масло', amount: '500 мл', icon: Icons.invert_colors),
-      const _FridgeItem(title: 'Яйцо', amount: '10 шт', icon: Icons.emoji_food_beverage),
-      const _FridgeItem(title: 'Яблоко', amount: '5 шт', icon: Icons.spa),
-      const _FridgeItem(title: 'Лимон', amount: '2 шт', icon: Icons.circle),
-      const _FridgeItem(title: 'Куринное филе', amount: '200 г', icon: Icons.set_meal),
-    ];
+  State<_ItemsGrid> createState() => _ItemsGridState();
+}
 
-    return Column(
-      children: [
-        items[0],
-        const SizedBox(height: 12),
-        items[1],
-        const SizedBox(height: 12),
-        items[2],
-        const SizedBox(height: 12),
-        items[3],
-        const SizedBox(height: 12),
-        items[4],
-        const SizedBox(height: 12),
-        items[5],
-      ],
-    );
+class _ItemsGridState extends State<_ItemsGrid> {
+  late List<_ItemData> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    _items = [
+      const _ItemData(title: 'Молоко', amount: '1 л', icon: Icons.local_drink),
+      const _ItemData(
+          title: 'Оливковое масло',
+          amount: '500 мл',
+          icon: Icons.invert_colors),
+      const _ItemData(
+          title: 'Яйцо', amount: '10 шт', icon: Icons.emoji_food_beverage),
+      const _ItemData(title: 'Яблоко', amount: '5 шт', icon: Icons.spa),
+      const _ItemData(title: 'Лимон', amount: '2 шт', icon: Icons.circle),
+      const _ItemData(
+          title: 'Куринное филе', amount: '200 г', icon: Icons.set_meal),
+    ];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<Widget> children = [];
+    for (int i = 0; i < _items.length; i++) {
+      final item = _items[i];
+      final index = i; // закрепляем индекс для замыкания
+      children.add(
+        _FridgeItem(
+          title: item.title,
+          amount: item.amount,
+          icon: item.icon,
+          onDelete: () {
+            setState(() {
+              _items.removeAt(index);
+            });
+          },
+        ),
+      );
+      if (index + 1 < _items.length) {
+        children.add(const SizedBox(height: 12));
+      }
+    }
+    return Column(children: children);
   }
 }
 
@@ -193,8 +223,13 @@ class _FridgeItem extends StatelessWidget {
   final String title;
   final String amount;
   final IconData icon;
+  final VoidCallback onDelete;
 
-  const _FridgeItem({required this.title, required this.amount, required this.icon});
+  const _FridgeItem(
+      {required this.title,
+      required this.amount,
+      required this.icon,
+      required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -240,28 +275,35 @@ class _FridgeItem extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          _PlusButton(),
+          _TrashButton(onPressed: onDelete),
         ],
       ),
     );
   }
 }
 
-class _PlusButton extends StatelessWidget {
+class _TrashButton extends StatelessWidget {
+  final VoidCallback onPressed;
+  const _TrashButton({required this.onPressed});
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: const BoxDecoration(
-        color: Color(0xFFB3F800),
-        shape: BoxShape.circle,
-      ),
-      child: const Center(
-        child: Icon(
-          Icons.add,
-          color: Colors.black,
-          size: 22,
+    return GestureDetector(
+      onTap: onPressed,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          color: Color(0xFFB3F800),
+          shape: BoxShape.circle,
+        ),
+        child: const Center(
+          child: Icon(
+            Icons.delete,
+            color: Colors.black,
+            size: 22,
+          ),
         ),
       ),
     );
