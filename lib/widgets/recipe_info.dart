@@ -34,6 +34,8 @@ class RecipeInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final Size screenSize = MediaQuery.of(context).size;
+    final double heroHeight = screenSize.height * 0.35;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -46,7 +48,7 @@ class RecipeInfo extends StatelessWidget {
               ),
               child: Image.asset(
                 imageAsset,
-                height: 220,
+                height: heroHeight,
                 width: double.infinity,
                 fit: BoxFit.cover,
               ),

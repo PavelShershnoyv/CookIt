@@ -24,7 +24,7 @@ class RecipeInfoPage extends StatefulWidget {
     final extra = state.extra as Map<String, dynamic>?;
     final title = extra?['title'] as String? ?? 'Рецепт';
     final nutrition = extra?['nutrition'] as String? ?? '200 ккал на 100 г';
-    final imageAsset = extra?['imageAsset'] as String? ?? 'assets/images/recipes.png';
+    final imageAsset = extra?['imageAsset'] as String? ?? 'assets/images/mock.jpg';
     final favorite = extra?['favorite'] as bool? ?? false;
     final ingredients = (extra?['ingredients'] as List<Ingredient>?) ??
         const [
@@ -59,9 +59,10 @@ class _RecipeInfoPageState extends State<RecipeInfoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
+      extendBody: true,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 120),
           child: RecipeInfo(
             title: widget.title,
             nutrition: widget.nutrition,

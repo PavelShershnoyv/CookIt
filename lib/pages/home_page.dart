@@ -274,6 +274,7 @@ class _HorizontalRecipesList extends StatelessWidget {
                 ingredientsOwned: item['own'] as int,
                 ingredientsTotal: item['total'] as int,
                 favorite: item['fav'] as bool,
+                imageAsset: 'assets/images/mock.jpg',
               ),
             ),
           );

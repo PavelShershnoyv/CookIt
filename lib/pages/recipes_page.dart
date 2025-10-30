@@ -190,23 +190,23 @@ class _FeaturedRecipeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Right side: image
-          Container(
-            width: 140,
-            height: 120,
-            decoration: BoxDecoration(
-              color: const Color(0x332D2D2D),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Center(
-              child: Image.asset(
-                'assets/images/salat.png',
-                width: 120,
-                height: 120,
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
+  // Right side: image
+  Container(
+    width: 140,
+    height: 120,
+    decoration: BoxDecoration(
+      color: const Color(0x332D2D2D),
+      borderRadius: BorderRadius.circular(24),
+    ),
+    child: Center(
+      child: Image.asset(
+        'assets/images/mock.jpg',
+        width: 120,
+        height: 120,
+        fit: BoxFit.cover,
+      ),
+    ),
+  ),
         ],
       ),
     );
@@ -220,54 +220,57 @@ class _RecipeGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final all = <_RecipeItem>[
-      _RecipeItem(
-        title: 'Греческий салат',
-        time: '15 мин',
-        owned: 10,
-        total: 10,
-        favorite: true,
-        imageAsset: 'assets/images/salat.png',
-        category: 'Обед',
-      ),
-      _RecipeItem(
-        title: 'Жаренная курица',
-        time: '25 мин',
-        owned: 4,
-        total: 4,
-        category: 'Ужин',
-      ),
-      _RecipeItem(
-        title: 'Паста фузилли',
-        time: '20 мин',
-        owned: 6,
-        total: 9,
-        category: 'Обед',
-      ),
-      _RecipeItem(
-        title: 'Греческий салат',
-        time: '15 мин',
-        owned: 8,
-        total: 10,
-        imageAsset: 'assets/images/salat.png',
-        category: 'Обед',
-      ),
-      _RecipeItem(
-        title: 'Жаренная курица',
-        time: '25 мин',
-        owned: 2,
-        total: 5,
-        category: 'Ужин',
-      ),
-      _RecipeItem(
-        title: 'Греческий салат',
-        time: '15 мин',
-        owned: 8,
-        total: 10,
-        imageAsset: 'assets/images/salat.png',
-        category: 'Обед',
-      ),
-    ];
+  final all = <_RecipeItem>[
+    _RecipeItem(
+      title: 'Греческий салат',
+      time: '15 мин',
+      owned: 10,
+      total: 10,
+      favorite: true,
+      imageAsset: 'assets/images/mock.jpg',
+      category: 'Обед',
+    ),
+    _RecipeItem(
+      title: 'Жаренная курица',
+      time: '25 мин',
+      owned: 4,
+      total: 4,
+      imageAsset: 'assets/images/mock.jpg',
+      category: 'Ужин',
+    ),
+    _RecipeItem(
+      title: 'Паста фузилли',
+      time: '20 мин',
+      owned: 6,
+      total: 9,
+      imageAsset: 'assets/images/mock.jpg',
+      category: 'Обед',
+    ),
+    _RecipeItem(
+      title: 'Греческий салат',
+      time: '15 мин',
+      owned: 8,
+      total: 10,
+      imageAsset: 'assets/images/mock.jpg',
+      category: 'Обед',
+    ),
+    _RecipeItem(
+      title: 'Жаренная курица',
+      time: '25 мин',
+      owned: 2,
+      total: 5,
+      imageAsset: 'assets/images/mock.jpg',
+      category: 'Ужин',
+    ),
+    _RecipeItem(
+      title: 'Греческий салат',
+      time: '15 мин',
+      owned: 8,
+      total: 10,
+      imageAsset: 'assets/images/mock.jpg',
+      category: 'Обед',
+    ),
+  ];
 
     final base = selectedCategory == 'Все'
         ? all
@@ -314,7 +317,7 @@ class _RecipeGrid extends StatelessWidget {
         return {
           'title': item.title,
           'nutrition': '120 ккал на 100 г',
-          'imageAsset': item.imageAsset ?? 'assets/images/recipes.png',
+          'imageAsset': 'assets/images/mock.jpg',
           'favorite': item.favorite,
           'ingredients': const [
             Ingredient(name: 'Помидоры', amount: '2 шт', icon: Icons.local_florist),
@@ -327,7 +330,7 @@ class _RecipeGrid extends StatelessWidget {
         return {
           'title': item.title,
           'nutrition': '165 ккал на 100 г',
-          'imageAsset': 'assets/images/recipes.png',
+          'imageAsset': 'assets/images/mock.jpg',
           'favorite': item.favorite,
           'ingredients': const [
             Ingredient(name: 'Куриное филе', amount: '300 г', icon: Icons.set_meal),
@@ -339,7 +342,7 @@ class _RecipeGrid extends StatelessWidget {
         return {
           'title': item.title,
           'nutrition': '200 ккал на 100 г',
-          'imageAsset': 'assets/images/recipes.png',
+          'imageAsset': 'assets/images/mock.jpg',
           'favorite': item.favorite,
           'ingredients': const [
             Ingredient(name: 'Паста фузилли', amount: '200 г', icon: Icons.ramen_dining),
@@ -351,7 +354,7 @@ class _RecipeGrid extends StatelessWidget {
         return {
           'title': item.title,
           'nutrition': '100 ккал на 100 г',
-          'imageAsset': 'assets/images/recipes.png',
+          'imageAsset': 'assets/images/mock.jpg',
           'favorite': item.favorite,
           'ingredients': const [],
         };

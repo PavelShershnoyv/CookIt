@@ -256,14 +256,14 @@ class _HorizontalRecipesList extends StatelessWidget {
                 ingredientsOwned: item['own'] as int,
                 ingredientsTotal: item['total'] as int,
                 favorite: item['fav'] as bool,
-                imageAsset: item['img'] as String?,
+                imageAsset: 'assets/images/mock.jpg',
                 onTap: () {
                   final title = item['title'] as String;
                   final fav = item['fav'] as bool;
                   final extras = {
                     'title': title,
                     'nutrition': _nutritionFor(title),
-                    'imageAsset': (item['img'] as String?) ?? 'assets/images/recipes.png',
+                    'imageAsset': 'assets/images/mock.jpg',
                     'favorite': fav,
                     'ingredients': _ingredientsFor(title),
                   };
