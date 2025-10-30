@@ -10,6 +10,7 @@ class RecipeInfoPage extends StatefulWidget {
   final String imageAsset;
   final bool favorite;
   final List<Ingredient> ingredients;
+  final List<String> steps;
 
   const RecipeInfoPage({
     super.key,
@@ -17,6 +18,7 @@ class RecipeInfoPage extends StatefulWidget {
     required this.nutrition,
     required this.imageAsset,
     required this.ingredients,
+    required this.steps,
     this.favorite = false,
   });
 
@@ -32,11 +34,20 @@ class RecipeInfoPage extends StatefulWidget {
           Ingredient(name: 'Оливковое масло', amount: '1 ст.л.', icon: Icons.invert_colors),
           Ingredient(name: 'Соль', amount: 'по вкусу', icon: Icons.spa),
         ];
+    final steps = (extra?['steps'] as List<String>?) ?? const [
+      'Подготовьте продукты и рабочее место.',
+      'Нарежьте ингредиенты согласно рецепту.',
+      'Разогрейте сковороду/духовку и начните готовить.',
+      'Добавьте специи, перемешайте и доведите до нужной степени.',
+      'Проверьте готовность, снимите с огня.',
+      'Подавайте блюдо, украсьте по вкусу.',
+    ];
     return RecipeInfoPage(
       title: title,
       nutrition: nutrition,
       imageAsset: imageAsset,
       ingredients: ingredients,
+      steps: steps,
       favorite: favorite,
     );
   }
@@ -75,19 +86,11 @@ class _RecipeInfoPageState extends State<RecipeInfoPage> {
               });
             },
             onStartCooking: () {
-              final defaultSteps = <String>[
-                'Подготовьте продукты и рабочее место.',
-                'Нарежьте ингредиенты согласно рецепту.',
-                'Разогрейте сковороду/духовку и начните готовить.',
-                'Добавьте специи, перемешайте и доведите до нужной степени.',
-                'Проверьте готовность, снимите с огня.',
-                'Подавайте блюдо, украсьте по вкусу.',
-              ];
               context.push('/recipe/steps', extra: {
                 'title': widget.title,
                 'nutrition': widget.nutrition,
                 'imageAsset': widget.imageAsset,
-                'steps': defaultSteps,
+                'steps': widget.steps,
               });
             },
           ),

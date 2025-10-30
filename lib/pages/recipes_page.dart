@@ -5,6 +5,9 @@ import 'package:cookit/widgets/recipe_card.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cookit/design/images.dart';
 import 'package:cookit/widgets/recipe_info.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:cookit/data/recipe.dart';
 
 class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
@@ -15,6 +18,44 @@ class RecipesPage extends StatefulWidget {
 
 class _RecipesPageState extends State<RecipesPage> {
   String _selected = 'Все';
+  bool _loading = true;
+  String? _error;
+  List<Recipe> _recipes = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRecipes();
+  }
+
+  Future<void> _fetchRecipes() async {
+    try {
+      setState(() {
+        _loading = true;
+        _error = null;
+      });
+      final uri = Uri.parse('http://121.127.37.220:8000/recepts?limit=20');
+      final res = await http.get(uri, headers: {'accept': 'application/json'});
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final List<dynamic> data = jsonDecode(res.body) as List<dynamic>;
+        final recipes = data
+            .whereType<Map<String, dynamic>>()
+            .map((j) => Recipe.fromJson(j))
+            .toList();
+        setState(() {
+          _recipes = recipes;
+          _loading = false;
+        });
+      } else {
+        throw Exception('HTTP ${res.statusCode}: ${res.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,8 +89,31 @@ class _RecipesPageState extends State<RecipesPage> {
               // Subtitle (перемещено ниже промо-карточки)
               if (_selected == 'Все') _AvailableCount(selected: _selected),
               const SizedBox(height: 24),
-              // Recipe grid 2 x 3
-              _RecipeGrid(selectedCategory: _selected, onlyAvailable: _selected == 'Все'),
+              // Recipe grid
+              if (_loading)
+                const Center(child: CircularProgressIndicator(color: Color(0xFFB3F800)))
+              else if (_error != null)
+                Text(
+                  'Ошибка загрузки рецептов: \n$_error',
+                  style: const TextStyle(color: Colors.redAccent),
+                )
+              else
+                _RecipeGrid(
+                  selectedCategory: _selected,
+                  onlyAvailable: _selected == 'Все',
+                  items: _recipes
+                      .map((r) => _RecipeItem(
+                            title: r.name,
+                            time: '—',
+                            owned: 0,
+                            total: 0,
+                            favorite: false,
+                            imageAsset: 'assets/images/mock.jpg',
+                            category: _mapCategory(r.category),
+                            recipe: r,
+                          ))
+                      .toList(),
+                ),
               const SizedBox(height: 24),
               // Info chips
             ],
@@ -216,61 +280,12 @@ class _FeaturedRecipeCard extends StatelessWidget {
 class _RecipeGrid extends StatelessWidget {
   final String selectedCategory;
   final bool onlyAvailable;
-  const _RecipeGrid({required this.selectedCategory, required this.onlyAvailable});
+  final List<_RecipeItem> items;
+  const _RecipeGrid({required this.selectedCategory, required this.onlyAvailable, required this.items});
 
   @override
   Widget build(BuildContext context) {
-  final all = <_RecipeItem>[
-    _RecipeItem(
-      title: 'Греческий салат',
-      time: '15 мин',
-      owned: 10,
-      total: 10,
-      favorite: true,
-      imageAsset: 'assets/images/mock.jpg',
-      category: 'Обед',
-    ),
-    _RecipeItem(
-      title: 'Жаренная курица',
-      time: '25 мин',
-      owned: 4,
-      total: 4,
-      imageAsset: 'assets/images/mock.jpg',
-      category: 'Ужин',
-    ),
-    _RecipeItem(
-      title: 'Паста фузилли',
-      time: '20 мин',
-      owned: 6,
-      total: 9,
-      imageAsset: 'assets/images/mock.jpg',
-      category: 'Обед',
-    ),
-    _RecipeItem(
-      title: 'Греческий салат',
-      time: '15 мин',
-      owned: 8,
-      total: 10,
-      imageAsset: 'assets/images/mock.jpg',
-      category: 'Обед',
-    ),
-    _RecipeItem(
-      title: 'Жаренная курица',
-      time: '25 мин',
-      owned: 2,
-      total: 5,
-      imageAsset: 'assets/images/mock.jpg',
-      category: 'Ужин',
-    ),
-    _RecipeItem(
-      title: 'Греческий салат',
-      time: '15 мин',
-      owned: 8,
-      total: 10,
-      imageAsset: 'assets/images/mock.jpg',
-      category: 'Обед',
-    ),
-  ];
+  final all = items;
 
     final base = selectedCategory == 'Все'
         ? all
@@ -312,53 +327,16 @@ class _RecipeGrid extends StatelessWidget {
   }
 
   Map<String, dynamic> _extrasFor(_RecipeItem item) {
-    switch (item.title) {
-      case 'Греческий салат':
-        return {
-          'title': item.title,
-          'nutrition': '120 ккал на 100 г',
-          'imageAsset': 'assets/images/mock.jpg',
-          'favorite': item.favorite,
-          'ingredients': const [
-            Ingredient(name: 'Помидоры', amount: '2 шт', icon: Icons.local_florist),
-            Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
-            Ingredient(name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
-            Ingredient(name: 'Оливки', amount: '50 г', icon: Icons.circle),
-          ],
-        };
-      case 'Жаренная курица':
-        return {
-          'title': item.title,
-          'nutrition': '165 ккал на 100 г',
-          'imageAsset': 'assets/images/mock.jpg',
-          'favorite': item.favorite,
-          'ingredients': const [
-            Ingredient(name: 'Куриное филе', amount: '300 г', icon: Icons.set_meal),
-            Ingredient(name: 'Масло', amount: '1 ст.л.', icon: Icons.invert_colors),
-            Ingredient(name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
-          ],
-        };
-      case 'Паста фузилли':
-        return {
-          'title': item.title,
-          'nutrition': '200 ккал на 100 г',
-          'imageAsset': 'assets/images/mock.jpg',
-          'favorite': item.favorite,
-          'ingredients': const [
-            Ingredient(name: 'Паста фузилли', amount: '200 г', icon: Icons.ramen_dining),
-            Ingredient(name: 'Сливки', amount: '100 мл', icon: Icons.local_drink),
-            Ingredient(name: 'Сыр', amount: '50 г', icon: Icons.icecream),
-          ],
-        };
-      default:
-        return {
-          'title': item.title,
-          'nutrition': '100 ккал на 100 г',
-          'imageAsset': 'assets/images/mock.jpg',
-          'favorite': item.favorite,
-          'ingredients': const [],
-        };
-    }
+    final ingredients = _parseIngredients(item.recipe.sastav);
+    final steps = _parseSteps(item.recipe.instruction);
+    return {
+      'title': item.title,
+      'nutrition': '—',
+      'imageAsset': item.imageAsset ?? 'assets/images/mock.jpg',
+      'favorite': item.favorite,
+      'ingredients': ingredients,
+      'steps': steps,
+    };
   }
 }
 
@@ -370,6 +348,7 @@ class _RecipeItem {
   final bool favorite;
   final String? imageAsset;
   final String category;
+  final Recipe recipe;
   _RecipeItem({
     required this.title,
     required this.time,
@@ -378,6 +357,7 @@ class _RecipeItem {
     this.favorite = false,
     this.imageAsset,
     required this.category,
+    required this.recipe,
   });
 }
 
@@ -400,6 +380,58 @@ class _AvailableCount extends StatelessWidget {
       ),
     );
   }
+}
+
+String _mapCategory(int? c) {
+  switch (c) {
+    case 2:
+      return 'Завтрак';
+    case 3:
+      return 'Ужин';
+    case 1:
+    default:
+      return 'Обед';
+  }
+}
+
+List<Ingredient> _parseIngredients(String raw) {
+  var s = raw.replaceAll('\r', '');
+  s = s.replaceAll('Ингредиенты:', '');
+  // Убираем текст вида "На X порций:"
+  s = s.replaceAll(RegExp(r'На\s+\d+\s+порции?:'), '');
+  final parts = s.split(RegExp(r',|\n')).map((p) => p.trim()).where((p) => p.isNotEmpty);
+  final List<Ingredient> res = [];
+  for (final p in parts) {
+    final match = RegExp(r'^(\d+\s*[^,]*)').firstMatch(p);
+    final amount = match != null ? match.group(1)!.trim() : '';
+    final name = amount.isNotEmpty ? p.replaceFirst(amount, '').trim() : p.trim();
+    res.add(Ingredient(name: _capitalize(name), amount: amount));
+  }
+  if (res.isEmpty) {
+    res.add(const Ingredient(name: 'Ингредиенты не указаны', amount: ''));
+  }
+  return res;
+}
+
+List<String> _parseSteps(String raw) {
+  var s = raw.replaceAll('\r', '');
+  s = s.replaceAll('Инструкции:', '');
+  final lines = s.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+  final steps = <String>[];
+  for (final l in lines) {
+    var t = l;
+    t = t.replaceFirst(RegExp(r'^\d+\.?\s*'), '');
+    if (t.isNotEmpty) steps.add(_capitalize(t));
+  }
+  if (steps.isEmpty) {
+    steps.add('Инструкция не указана');
+  }
+  return steps;
+}
+
+String _capitalize(String s) {
+  if (s.isEmpty) return s;
+  return s[0].toUpperCase() + s.substring(1);
 }
 
 class _RecipeRow extends StatelessWidget {

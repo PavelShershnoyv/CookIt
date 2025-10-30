@@ -12,6 +12,8 @@ import 'pages/recipe_info_page.dart';
 import 'pages/cooking_steps_page.dart';
 
 void main() {
+  // Инициализируем биндинги Flutter перед вызовами SystemChrome
+  WidgetsFlutterBinding.ensureInitialized();
   // Прячем системные панели (статус-бар и навигацию) и оставляем жест для показа
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   // Делаем статус-бар прозрачным, чтобы контент мог идти под него
