@@ -9,6 +9,7 @@ import 'pages/scanner_page.dart';
 import 'pages/fridge_page.dart';
 import 'pages/validation_page.dart';
 import 'pages/recipe_info_page.dart';
+import 'pages/cooking_steps_page.dart';
 
 void main() {
   // Прячем системные панели (статус-бар и навигацию) и оставляем жест для показа
@@ -43,6 +44,9 @@ class MyApp extends StatelessWidget {
         GoRoute(
             path: '/recipe',
             builder: (context, state) => RecipeInfoPage.fromState(state)),
+        GoRoute(
+            path: '/recipe/steps',
+            builder: (context, state) => CookingStepsPage.fromState(state)),
       ],
       initialLocation: '/',
     );

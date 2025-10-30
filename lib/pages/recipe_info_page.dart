@@ -75,12 +75,20 @@ class _RecipeInfoPageState extends State<RecipeInfoPage> {
               });
             },
             onStartCooking: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Начинаем готовить!'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+              final defaultSteps = <String>[
+                'Подготовьте продукты и рабочее место.',
+                'Нарежьте ингредиенты согласно рецепту.',
+                'Разогрейте сковороду/духовку и начните готовить.',
+                'Добавьте специи, перемешайте и доведите до нужной степени.',
+                'Проверьте готовность, снимите с огня.',
+                'Подавайте блюдо, украсьте по вкусу.',
+              ];
+              context.push('/recipe/steps', extra: {
+                'title': widget.title,
+                'nutrition': widget.nutrition,
+                'imageAsset': widget.imageAsset,
+                'steps': defaultSteps,
+              });
             },
           ),
         ),
