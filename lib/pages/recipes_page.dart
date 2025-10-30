@@ -6,8 +6,15 @@ import 'package:go_router/go_router.dart';
 import 'package:cookit/design/images.dart';
 import 'package:cookit/widgets/recipe_info.dart';
 
-class RecipesPage extends StatelessWidget {
+class RecipesPage extends StatefulWidget {
   const RecipesPage({super.key});
+
+  @override
+  State<RecipesPage> createState() => _RecipesPageState();
+}
+
+class _RecipesPageState extends State<RecipesPage> {
+  String _selected = 'Все';
 
   @override
   Widget build(BuildContext context) {
@@ -30,23 +37,19 @@ class RecipesPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               // Filters row (перемещено под заголовок)
-              _Filters(),
+              _Filters(
+                selected: _selected,
+                onSelected: (value) => setState(() => _selected = value),
+              ),
               const SizedBox(height: 16),
-              // Промо-карточка рецепта (как в макете)
-              const _FeaturedRecipeCard(),
+              // Промо-карточка рецепта только в разделе "Все"
+              if (_selected == 'Все') const _FeaturedRecipeCard(),
               const SizedBox(height: 24),
               // Subtitle (перемещено ниже промо-карточки)
-              const Text(
-                '10 доступных рецептов',
-                style: TextStyle(
-                  color: Color(0xFFBBBCBC),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
+              if (_selected == 'Все') _AvailableCount(selected: _selected),
               const SizedBox(height: 24),
               // Recipe grid 2 x 3
-              _RecipeGrid(),
+              _RecipeGrid(selectedCategory: _selected, onlyAvailable: _selected == 'Все'),
               const SizedBox(height: 24),
               // Info chips
             ],
@@ -71,21 +74,30 @@ class RecipesPage extends StatelessWidget {
 }
 
 class _Filters extends StatelessWidget {
+  final String selected;
+  final ValueChanged<String> onSelected;
+  const _Filters({required this.selected, required this.onSelected});
+
   @override
   Widget build(BuildContext context) {
+    Widget chip(String label) => _FilterChip(
+          label: label,
+          selected: selected == label,
+          onTap: () => onSelected(label),
+        );
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: const [
-          _FilterChip(label: 'Все', selected: true),
-          SizedBox(width: 12),
-          _FilterChip(label: 'Завтрак'),
-          SizedBox(width: 12),
-          _FilterChip(label: 'Обед'),
-          SizedBox(width: 12),
-          _FilterChip(label: 'Ужин'),
-          SizedBox(width: 12),
-          _FilterChip(label: 'Десерт'),
+        children: [
+          chip('Все'),
+          const SizedBox(width: 12),
+          chip('Завтрак'),
+          const SizedBox(width: 12),
+          chip('Обед'),
+          const SizedBox(width: 12),
+          chip('Ужин'),
+          const SizedBox(width: 12),
+          chip('Десерт'),
         ],
       ),
     );
@@ -95,7 +107,8 @@ class _Filters extends StatelessWidget {
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
-  const _FilterChip({required this.label, this.selected = false});
+  final VoidCallback? onTap;
+  const _FilterChip({required this.label, this.selected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -109,10 +122,14 @@ class _FilterChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(100),
           );
     final textColor = selected ? Colors.black : Colors.white;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: decoration,
-      child: Text(label, style: TextStyle(color: textColor, fontSize: 18)),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: decoration,
+        child: Text(label, style: TextStyle(color: textColor, fontSize: 18)),
+      ),
     );
   }
 }
@@ -136,7 +153,7 @@ class _FeaturedRecipeCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Паста фузилли',
+                  'Греческий салат',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 24,
@@ -145,7 +162,7 @@ class _FeaturedRecipeCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  '200 ккал на 100 г',
+                  '120 ккал на 100 г',
                   style: TextStyle(
                     color: Color(0xFFBBBCBC),
                     fontSize: 14,
@@ -173,7 +190,7 @@ class _FeaturedRecipeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-          // Right side: image placeholder (using dinner icon)
+          // Right side: image
           Container(
             width: 140,
             height: 120,
@@ -183,10 +200,10 @@ class _FeaturedRecipeCard extends StatelessWidget {
             ),
             child: Center(
               child: Image.asset(
-                dinnerImg,
-                width: 100,
-                height: 100,
-                fit: BoxFit.contain,
+                'assets/images/salat.png',
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
               ),
             ),
           ),
@@ -197,181 +214,187 @@ class _FeaturedRecipeCard extends StatelessWidget {
 }
 
 class _RecipeGrid extends StatelessWidget {
+  final String selectedCategory;
+  final bool onlyAvailable;
+  const _RecipeGrid({required this.selectedCategory, required this.onlyAvailable});
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
+    final all = <_RecipeItem>[
+      _RecipeItem(
+        title: 'Греческий салат',
+        time: '15 мин',
+        owned: 10,
+        total: 10,
+        favorite: true,
+        imageAsset: 'assets/images/salat.png',
+        category: 'Обед',
+      ),
+      _RecipeItem(
+        title: 'Жаренная курица',
+        time: '25 мин',
+        owned: 4,
+        total: 4,
+        category: 'Ужин',
+      ),
+      _RecipeItem(
+        title: 'Паста фузилли',
+        time: '20 мин',
+        owned: 6,
+        total: 9,
+        category: 'Обед',
+      ),
+      _RecipeItem(
+        title: 'Греческий салат',
+        time: '15 мин',
+        owned: 8,
+        total: 10,
+        imageAsset: 'assets/images/salat.png',
+        category: 'Обед',
+      ),
+      _RecipeItem(
+        title: 'Жаренная курица',
+        time: '25 мин',
+        owned: 2,
+        total: 5,
+        category: 'Ужин',
+      ),
+      _RecipeItem(
+        title: 'Греческий салат',
+        time: '15 мин',
+        owned: 8,
+        total: 10,
+        imageAsset: 'assets/images/salat.png',
+        category: 'Обед',
+      ),
+    ];
+
+    final base = selectedCategory == 'Все'
+        ? all
+        : all.where((e) => e.category == selectedCategory).toList();
+    final filtered = onlyAvailable
+        ? base.where((e) => e.owned >= e.total).toList()
+        : base;
+
+    // Рисуем по двум колонкам c равными отступами между рядами
+    final List<Widget> children = [];
+    for (int i = 0; i < filtered.length; i += 2) {
+      final left = filtered[i];
+      final right = (i + 1 < filtered.length) ? filtered[i + 1] : null;
+      children.add(
         _RecipeRow(
-          left: RecipeCard(
-            title: 'Греческий салат',
-            time: '15 мин',
-            ingredientsOwned: 8,
-            ingredientsTotal: 10,
-            favorite: true,
-            imageAsset: 'assets/images/salat.png',
-            onTap: () {
-              final extras = {
-                'title': 'Греческий салат',
-                'nutrition': '120 ккал на 100 г',
-                'imageAsset': 'assets/images/salat.png',
-                'favorite': true,
-                'ingredients': const [
-                  Ingredient(
-                      name: 'Помидоры',
-                      amount: '2 шт',
-                      icon: Icons.local_florist),
-                  Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
-                  Ingredient(
-                      name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
-                  Ingredient(
-                      name: 'Оливки', amount: '50 г', icon: Icons.circle),
-                ],
-              };
-              context.push('/recipe', extra: extras);
-            },
-          ),
-          right: RecipeCard(
-            title: 'Жаренная курица',
-            time: '25 мин',
-            ingredientsOwned: 3,
-            ingredientsTotal: 4,
-            onTap: () {
-              final extras = {
-                'title': 'Жаренная курица',
-                'nutrition': '165 ккал на 100 г',
-                'imageAsset': 'assets/images/recipes.png',
-                'favorite': false,
-                'ingredients': const [
-                  Ingredient(
-                      name: 'Куриное филе',
-                      amount: '300 г',
-                      icon: Icons.set_meal),
-                  Ingredient(
-                      name: 'Масло',
-                      amount: '1 ст.л.',
-                      icon: Icons.invert_colors),
-                  Ingredient(
-                      name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
-                ],
-              };
-              context.push('/recipe', extra: extras);
-            },
-          ),
+          left: _buildCard(context, left),
+          right:
+              right != null ? _buildCard(context, right) : const SizedBox.shrink(),
         ),
-        const SizedBox(height: 16),
-        _RecipeRow(
-          left: RecipeCard(
-            title: 'Паста фузилли',
-            time: '20 мин',
-            ingredientsOwned: 6,
-            ingredientsTotal: 9,
-            onTap: () {
-              final extras = {
-                'title': 'Паста фузилли',
-                'nutrition': '200 ккал на 100 г',
-                'imageAsset': 'assets/images/recipes.png',
-                'favorite': false,
-                'ingredients': const [
-                  Ingredient(
-                      name: 'Паста фузилли',
-                      amount: '200 г',
-                      icon: Icons.ramen_dining),
-                  Ingredient(
-                      name: 'Сливки',
-                      amount: '100 мл',
-                      icon: Icons.local_drink),
-                  Ingredient(name: 'Сыр', amount: '50 г', icon: Icons.icecream),
-                ],
-              };
-              context.push('/recipe', extra: extras);
-            },
-          ),
-          right: RecipeCard(
-            title: 'Греческий салат',
-            time: '15 мин',
-            ingredientsOwned: 8,
-            ingredientsTotal: 10,
-            imageAsset: 'assets/images/salat.png',
-            onTap: () {
-              final extras = {
-                'title': 'Греческий салат',
-                'nutrition': '120 ккал на 100 г',
-                'imageAsset': 'assets/images/salat.png',
-                'favorite': false,
-                'ingredients': const [
-                  Ingredient(
-                      name: 'Помидоры',
-                      amount: '2 шт',
-                      icon: Icons.local_florist),
-                  Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
-                  Ingredient(
-                      name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
-                  Ingredient(
-                      name: 'Оливки', amount: '50 г', icon: Icons.circle),
-                ],
-              };
-              context.push('/recipe', extra: extras);
-            },
-          ),
-        ),
-        const SizedBox(height: 16),
-        _RecipeRow(
-          left: RecipeCard(
-            title: 'Жаренная курица',
-            time: '25 мин',
-            ingredientsOwned: 2,
-            ingredientsTotal: 5,
-            onTap: () {
-              final extras = {
-                'title': 'Жаренная курица',
-                'nutrition': '165 ккал на 100 г',
-                'imageAsset': 'assets/images/recipes.png',
-                'favorite': false,
-                'ingredients': const [
-                  Ingredient(
-                      name: 'Куриное филе',
-                      amount: '300 г',
-                      icon: Icons.set_meal),
-                  Ingredient(
-                      name: 'Масло',
-                      amount: '1 ст.л.',
-                      icon: Icons.invert_colors),
-                  Ingredient(
-                      name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
-                ],
-              };
-              context.push('/recipe', extra: extras);
-            },
-          ),
-          right: RecipeCard(
-            title: 'Греческий салат',
-            time: '15 мин',
-            ingredientsOwned: 8,
-            ingredientsTotal: 10,
-            imageAsset: 'assets/images/salat.png',
-            onTap: () {
-              final extras = {
-                'title': 'Греческий салат',
-                'nutrition': '120 ккал на 100 г',
-                'imageAsset': 'assets/images/salat.png',
-                'favorite': false,
-                'ingredients': const [
-                  Ingredient(
-                      name: 'Помидоры',
-                      amount: '2 шт',
-                      icon: Icons.local_florist),
-                  Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
-                  Ingredient(
-                      name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
-                  Ingredient(
-                      name: 'Оливки', amount: '50 г', icon: Icons.circle),
-                ],
-              };
-              context.push('/recipe', extra: extras);
-            },
-          ),
-        ),
-      ],
+      );
+      if (i + 2 < filtered.length) {
+        children.add(const SizedBox(height: 16));
+      }
+    }
+
+    return Column(children: children);
+  }
+
+  Widget _buildCard(BuildContext context, _RecipeItem item) {
+    return RecipeCard(
+      title: item.title,
+      time: item.time,
+      ingredientsOwned: item.owned,
+      ingredientsTotal: item.total,
+      favorite: item.favorite,
+      imageAsset: item.imageAsset,
+      onTap: () => context.push('/recipe', extra: _extrasFor(item)),
+    );
+  }
+
+  Map<String, dynamic> _extrasFor(_RecipeItem item) {
+    switch (item.title) {
+      case 'Греческий салат':
+        return {
+          'title': item.title,
+          'nutrition': '120 ккал на 100 г',
+          'imageAsset': item.imageAsset ?? 'assets/images/recipes.png',
+          'favorite': item.favorite,
+          'ingredients': const [
+            Ingredient(name: 'Помидоры', amount: '2 шт', icon: Icons.local_florist),
+            Ingredient(name: 'Огурец', amount: '1 шт', icon: Icons.eco),
+            Ingredient(name: 'Сыр фета', amount: '150 г', icon: Icons.icecream),
+            Ingredient(name: 'Оливки', amount: '50 г', icon: Icons.circle),
+          ],
+        };
+      case 'Жаренная курица':
+        return {
+          'title': item.title,
+          'nutrition': '165 ккал на 100 г',
+          'imageAsset': 'assets/images/recipes.png',
+          'favorite': item.favorite,
+          'ingredients': const [
+            Ingredient(name: 'Куриное филе', amount: '300 г', icon: Icons.set_meal),
+            Ingredient(name: 'Масло', amount: '1 ст.л.', icon: Icons.invert_colors),
+            Ingredient(name: 'Чеснок', amount: '2 зубчика', icon: Icons.spa),
+          ],
+        };
+      case 'Паста фузилли':
+        return {
+          'title': item.title,
+          'nutrition': '200 ккал на 100 г',
+          'imageAsset': 'assets/images/recipes.png',
+          'favorite': item.favorite,
+          'ingredients': const [
+            Ingredient(name: 'Паста фузилли', amount: '200 г', icon: Icons.ramen_dining),
+            Ingredient(name: 'Сливки', amount: '100 мл', icon: Icons.local_drink),
+            Ingredient(name: 'Сыр', amount: '50 г', icon: Icons.icecream),
+          ],
+        };
+      default:
+        return {
+          'title': item.title,
+          'nutrition': '100 ккал на 100 г',
+          'imageAsset': 'assets/images/recipes.png',
+          'favorite': item.favorite,
+          'ingredients': const [],
+        };
+    }
+  }
+}
+
+class _RecipeItem {
+  final String title;
+  final String time;
+  final int owned;
+  final int total;
+  final bool favorite;
+  final String? imageAsset;
+  final String category;
+  _RecipeItem({
+    required this.title,
+    required this.time,
+    required this.owned,
+    required this.total,
+    this.favorite = false,
+    this.imageAsset,
+    required this.category,
+  });
+}
+
+class _AvailableCount extends StatelessWidget {
+  final String selected;
+  const _AvailableCount({required this.selected});
+
+  @override
+  Widget build(BuildContext context) {
+    final Map<String, int> counts = {
+      'Все': 2,
+    };
+    final value = counts[selected] ?? 0;
+    return Text(
+      '$value доступных рецептов',
+      style: const TextStyle(
+        color: Color(0xFFBBBCBC),
+        fontSize: 24,
+        fontWeight: FontWeight.w400,
+      ),
     );
   }
 }
