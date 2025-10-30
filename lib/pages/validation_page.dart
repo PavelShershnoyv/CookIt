@@ -1,21 +1,74 @@
 import 'package:flutter/material.dart';
 import 'package:cookit/design/colors.dart';
+import 'package:go_router/go_router.dart';
 
 class ValidationPage extends StatefulWidget {
-  const ValidationPage({super.key});
+  final Map<String, dynamic>? payload;
+  const ValidationPage({super.key, this.payload});
+
+  factory ValidationPage.fromState(GoRouterState state) {
+    final extra = state.extra;
+    final payload = extra is Map<String, dynamic> ? extra : null;
+    return ValidationPage(payload: payload);
+  }
 
   @override
   State<ValidationPage> createState() => _ValidationPageState();
 }
 
 class _ValidationPageState extends State<ValidationPage> {
-  final List<_Item> _items = const [
-    _Item('Яйцо', Icons.egg),
-    _Item('Молоко', Icons.local_drink),
-    _Item('Оливковое масло', Icons.invert_colors),
-    _Item('Лимон', Icons.emoji_food_beverage),
-    _Item('Яблоко', Icons.apple),
-  ];
+  late final List<_Item> _items;
+
+  @override
+  void initState() {
+    super.initState();
+    final detected = (widget.payload?['detected_ingredients'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        [
+          'яйцо',
+          'молоко',
+          'оливковое масло',
+          'лимон',
+          'яблоко',
+        ];
+    _items = detected
+        .map((name) => _Item(_capitalize(name), _iconFor(name)))
+        .toList();
+  }
+
+  String _capitalize(String s) {
+    if (s.isEmpty) return s;
+    return s[0].toUpperCase() + s.substring(1);
+  }
+
+  IconData _iconFor(String raw) {
+    final name = raw.trim().toLowerCase();
+    switch (name) {
+      case 'яблоко':
+        return Icons.apple;
+      case 'лимон':
+        return Icons.emoji_food_beverage;
+      case 'яйцо':
+        return Icons.egg;
+      case 'молоко':
+        return Icons.local_drink;
+      case 'оливковое масло':
+        return Icons.invert_colors;
+      case 'помидоры':
+      case 'помидор':
+        return Icons.local_pizza;
+      case 'шпинат':
+        return Icons.eco;
+      case 'курица':
+      case 'мясо':
+        return Icons.set_meal;
+      case 'морковь':
+        return Icons.local_florist;
+      default:
+        return Icons.check_circle_outline;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

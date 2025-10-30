@@ -40,7 +40,8 @@ class MyApp extends StatelessWidget {
         GoRoute(
             path: '/fridge', builder: (context, state) => const FridgePage()),
         GoRoute(
-            path: '/validation', builder: (context, state) => const ValidationPage()),
+            path: '/validation',
+            builder: (context, state) => ValidationPage.fromState(state)),
         GoRoute(
             path: '/recipe',
             builder: (context, state) => RecipeInfoPage.fromState(state)),
