@@ -399,14 +399,66 @@ List<Ingredient> _parseIngredients(String raw) {
   s = s.replaceAll('Ингредиенты:', '');
   // Убираем текст вида "На X порций:"
   s = s.replaceAll(RegExp(r'На\s+\d+\s+порции?:'), '');
-  final parts = s.split(RegExp(r',|\n')).map((p) => p.trim()).where((p) => p.isNotEmpty);
+  // Парсим строго по запятой
+  final parts = s.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty);
+
+  // Часто встречающиеся единицы измерения
+  final unitCandidates = <String>{
+    'гр', 'кг', 'мг', 'мл', 'л', 'шт',
+    'ст.л.', 'ч.л.', 'ст. л.', 'ч. л.',
+    'стакан', 'чашка', 'пучок', 'щепотка', 'долька', 'головка', 'пакет', 'пакетик',
+    'ломтик', 'кусок', 'капля', 'по вкусу',
+  };
+
   final List<Ingredient> res = [];
-  for (final p in parts) {
-    final match = RegExp(r'^(\d+\s*[^,]*)').firstMatch(p);
-    final amount = match != null ? match.group(1)!.trim() : '';
-    final name = amount.isNotEmpty ? p.replaceFirst(amount, '').trim() : p.trim();
+  for (final original in parts) {
+    var p = original.trim();
+    if (p.isEmpty) continue;
+
+    // Нормализуем разделители
+    p = p.replaceAll(RegExp(r'[–—]'), ' '); // длинные дефисы → пробел
+    p = p.replaceAll(':', ' ');
+
+    // Ищем количество (первая числовая группа)
+    final qtyMatch = RegExp(r'(\d+(?:[.,]\d+)?)').firstMatch(p);
+    final qty = qtyMatch != null ? qtyMatch.group(1)!.trim() : '';
+
+    // Ищем единицу измерения по списку кандидатов (кейсы и точки учитываем)
+    String unit = '';
+    final lower = p.toLowerCase();
+    for (final u in unitCandidates) {
+      if (lower.contains(u)) {
+        unit = u;
+        break;
+      }
+    }
+
+    // Формируем amount по найденным значениям (сохраняем и количеcтво, и единицы)
+    String amount = '';
+    if (unit.isNotEmpty && qty.isNotEmpty) {
+      amount = '$qty $unit';
+    } else if (unit.isNotEmpty) {
+      amount = unit;
+    } else if (qty.isNotEmpty) {
+      amount = qty;
+    }
+
+    // Выделяем название: выкидываем qty и unit из строки
+    var name = p;
+    if (qty.isNotEmpty) {
+      name = name.replaceFirst(qty, '');
+    }
+    if (unit.isNotEmpty) {
+      name = name.replaceFirst(RegExp(RegExp.escape(unit), caseSensitive: false), '');
+    }
+    name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
+
+    // Если имя пустое — оставляем оригинал
+    if (name.isEmpty) name = original.trim();
+
     res.add(Ingredient(name: _capitalize(name), amount: amount));
   }
+
   if (res.isEmpty) {
     res.add(const Ingredient(name: 'Ингредиенты не указаны', amount: ''));
   }
@@ -416,7 +468,7 @@ List<Ingredient> _parseIngredients(String raw) {
 List<String> _parseSteps(String raw) {
   var s = raw.replaceAll('\r', '');
   s = s.replaceAll('Инструкции:', '');
-  final lines = s.split('\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+  final lines = s.split('\\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
   final steps = <String>[];
   for (final l in lines) {
     var t = l;
