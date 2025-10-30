@@ -36,7 +36,10 @@ class MyApp extends StatelessWidget {
         GoRoute(path: '/', builder: (context, state) => const StartPage()),
         GoRoute(path: '/home', builder: (context, state) => const HomePage()),
         GoRoute(
-            path: '/recipes', builder: (context, state) => const RecipesPage()),
+            path: '/recipes',
+            builder: (context, state) => RecipesPage(
+                  initialSelected: state.uri.queryParameters['tab'],
+                )),
         GoRoute(
             path: '/scanner', builder: (context, state) => const ScannerPage()),
         GoRoute(

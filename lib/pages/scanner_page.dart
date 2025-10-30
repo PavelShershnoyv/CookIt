@@ -8,6 +8,7 @@ import 'package:cookit/widgets/nav_panel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -25,8 +26,8 @@ class _ScannerPageState extends State<ScannerPage> {
   @override
   void initState() {
     super.initState();
-    // Открываем камеру сразу после захода на страницу
-    WidgetsBinding.instance.addPostFrameCallback((_) => _openCamera());
+    // Предлагаем выбрать источник сразу после захода на страницу
+    WidgetsBinding.instance.addPostFrameCallback((_) => _chooseSource());
   }
 
   Future<void> _openCamera() async {
@@ -49,6 +50,59 @@ class _ScannerPageState extends State<ScannerPage> {
     }
   }
 
+  Future<void> _openGallery() async {
+    try {
+      final XFile? photo = await _picker.pickImage(source: ImageSource.gallery);
+      if (!mounted) return;
+      if (photo != null) {
+        setState(() => _captured = photo);
+        await _uploadAndNavigate(photo);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Не удалось открыть галерею: $e')),
+      );
+    }
+  }
+
+  Future<void> _chooseSource() async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF2D2D2D),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.camera_alt, color: Colors.white),
+                title: const Text('Сделать фото', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(ctx, 'camera'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.photo_library, color: Colors.white),
+                title: const Text('Выбрать из галереи', style: TextStyle(color: Colors.white)),
+                onTap: () => Navigator.pop(ctx, 'gallery'),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return;
+    if (choice == 'camera') {
+      await _openCamera();
+    } else if (choice == 'gallery') {
+      await _openGallery();
+    }
+  }
+
   Future<void> _uploadAndNavigate(XFile photo) async {
     try {
       setState(() {
@@ -61,8 +115,26 @@ class _ScannerPageState extends State<ScannerPage> {
       request.headers['accept'] = 'application/json';
 
       final bytes = await photo.readAsBytes();
-      final fileName = photo.name.isNotEmpty ? photo.name : 'captured.png';
-      final multipartFile = http.MultipartFile.fromBytes('file', bytes, filename: fileName);
+      final fileName = photo.name.isNotEmpty ? photo.name : 'captured.jpg';
+      // Определяем MIME-тип по расширению/имени (по умолчанию jpeg)
+      final lower = fileName.toLowerCase();
+      MediaType contentType;
+      if (lower.endsWith('.png')) {
+        contentType = MediaType('image', 'png');
+      } else if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) {
+        contentType = MediaType('image', 'jpeg');
+      } else if (lower.endsWith('.gif')) {
+        contentType = MediaType('image', 'gif');
+      } else {
+        contentType = MediaType('image', 'jpeg');
+      }
+
+      final multipartFile = http.MultipartFile.fromBytes(
+        'file',
+        bytes,
+        filename: fileName,
+        contentType: contentType,
+      );
       request.files.add(multipartFile);
 
       final streamed = await request.send();
@@ -102,7 +174,12 @@ class _ScannerPageState extends State<ScannerPage> {
             onPressed: _openCamera,
             icon: const Icon(Icons.camera_alt),
             tooltip: 'Открыть камеру',
-          )
+          ),
+          IconButton(
+            onPressed: _openGallery,
+            icon: const Icon(Icons.photo_library),
+            tooltip: 'Выбрать из галереи',
+          ),
         ],
       ),
       body: Stack(
@@ -110,7 +187,7 @@ class _ScannerPageState extends State<ScannerPage> {
           Center(
             child: _captured == null
                 ? const Text(
-                    'Камера откроется автоматически.\nНажмите на иконку камеры, чтобы открыть вручную.',
+                    'Выберите источник: камера или галерея.\nНажмите на иконки вверху, чтобы открыть.',
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Colors.white, fontSize: 16),
                   )
@@ -132,8 +209,8 @@ class _ScannerPageState extends State<ScannerPage> {
           } else if (index == 1) {
             context.go('/recipes');
           } else if (index == 2) {
-            // остаёмся на сканере, камера уже открывается автоматически
-            _openCamera();
+            // остаёмся на сканере: предложить выбрать источник
+            _chooseSource();
           }
         },
       ),

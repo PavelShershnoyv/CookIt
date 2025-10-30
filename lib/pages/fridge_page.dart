@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cookit/design/colors.dart';
 import 'package:cookit/widgets/nav_panel.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cookit/data/fridge_store.dart';
 
 class FridgePage extends StatelessWidget {
   const FridgePage({super.key});
@@ -155,49 +156,32 @@ class _ItemsGrid extends StatefulWidget {
 }
 
 class _ItemsGridState extends State<_ItemsGrid> {
-  late List<_ItemData> _items;
-
-  @override
-  void initState() {
-    super.initState();
-    _items = [
-      const _ItemData(title: 'Молоко', amount: '1 л', icon: Icons.local_drink),
-      const _ItemData(
-          title: 'Оливковое масло',
-          amount: '500 мл',
-          icon: Icons.invert_colors),
-      const _ItemData(
-          title: 'Яйцо', amount: '10 шт', icon: Icons.emoji_food_beverage),
-      const _ItemData(title: 'Яблоко', amount: '5 шт', icon: Icons.spa),
-      const _ItemData(title: 'Лимон', amount: '2 шт', icon: Icons.circle),
-      const _ItemData(
-          title: 'Куринное филе', amount: '200 г', icon: Icons.set_meal),
-    ];
-  }
-
   @override
   Widget build(BuildContext context) {
-    final List<Widget> children = [];
-    for (int i = 0; i < _items.length; i++) {
-      final item = _items[i];
-      final index = i; // закрепляем индекс для замыкания
-      children.add(
-        _FridgeItem(
-          title: item.title,
-          amount: item.amount,
-          icon: item.icon,
-          onDelete: () {
-            setState(() {
-              _items.removeAt(index);
-            });
-          },
-        ),
-      );
-      if (index + 1 < _items.length) {
-        children.add(const SizedBox(height: 12));
-      }
-    }
-    return Column(children: children);
+    return ValueListenableBuilder<List<FridgeItem>>(
+      valueListenable: FridgeStore.instance.itemsListenable,
+      builder: (context, items, _) {
+        final List<Widget> children = [];
+        for (int i = 0; i < items.length; i++) {
+          final item = items[i];
+          final index = i;
+          children.add(
+            _FridgeItem(
+              title: item.title,
+              amount: item.amount,
+              icon: item.icon,
+              onDelete: () {
+                FridgeStore.instance.removeAt(index);
+              },
+            ),
+          );
+          if (index + 1 < items.length) {
+            children.add(const SizedBox(height: 12));
+          }
+        }
+        return Column(children: children);
+      },
+    );
   }
 }
 

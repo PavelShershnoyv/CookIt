@@ -8,9 +8,11 @@ import 'package:cookit/widgets/recipe_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:cookit/data/recipe.dart';
+import 'package:cookit/data/fridge_store.dart';
 
 class RecipesPage extends StatefulWidget {
-  const RecipesPage({super.key});
+  final String? initialSelected;
+  const RecipesPage({super.key, this.initialSelected});
 
   @override
   State<RecipesPage> createState() => _RecipesPageState();
@@ -25,6 +27,12 @@ class _RecipesPageState extends State<RecipesPage> {
   @override
   void initState() {
     super.initState();
+    // Инициализируем выбранный фильтр из параметра навигации, если он валиден
+    const allowed = ['Все', 'Завтрак', 'Обед', 'Ужин', 'Десерт'];
+    final init = widget.initialSelected;
+    if (init != null && allowed.contains(init)) {
+      _selected = init;
+    }
     _fetchRecipes();
   }
 
@@ -34,7 +42,7 @@ class _RecipesPageState extends State<RecipesPage> {
         _loading = true;
         _error = null;
       });
-      final uri = Uri.parse('http://121.127.37.220:8000/recepts?limit=20');
+      final uri = Uri.parse('http://121.127.37.220:8000/recepts?limit=200');
       final res = await http.get(uri, headers: {'accept': 'application/json'});
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final List<dynamic> data = jsonDecode(res.body) as List<dynamic>;
@@ -86,33 +94,54 @@ class _RecipesPageState extends State<RecipesPage> {
               // Промо-карточка рецепта только в разделе "Все"
               if (_selected == 'Все') const _FeaturedRecipeCard(),
               const SizedBox(height: 24),
-              // Subtitle (перемещено ниже промо-карточки)
-              if (_selected == 'Все') _AvailableCount(selected: _selected),
               const SizedBox(height: 24),
               // Recipe grid
               if (_loading)
-                const Center(child: CircularProgressIndicator(color: Color(0xFFB3F800)))
+                const Center(
+                    child: CircularProgressIndicator(color: Color(0xFFB3F800)))
               else if (_error != null)
                 Text(
                   'Ошибка загрузки рецептов: \n$_error',
                   style: const TextStyle(color: Colors.redAccent),
                 )
               else
-                _RecipeGrid(
-                  selectedCategory: _selected,
-                  onlyAvailable: _selected == 'Все',
-                  items: _recipes
-                      .map((r) => _RecipeItem(
-                            title: r.name,
-                            time: '—',
-                            owned: 0,
-                            total: 0,
-                            favorite: false,
-                            imageAsset: 'assets/images/mock.jpg',
-                            category: _mapCategory(r.category),
-                            recipe: r,
-                          ))
-                      .toList(),
+                ValueListenableBuilder<List<FridgeItem>>(
+                  valueListenable: FridgeStore.instance.itemsListenable,
+                  builder: (context, fridgeItems, _) {
+                    final items = _recipes.map((r) {
+                      final ingredients = _parseIngredients(r.sastav);
+                      final owned = _countOwned(ingredients, fridgeItems);
+                      final total = ingredients.length;
+                      return _RecipeItem(
+                        title: r.name,
+                        time: '—',
+                        owned: owned,
+                        total: total,
+                        favorite: false,
+                        imageAsset: 'assets/images/mock.jpg',
+                        category: _mapCategory(r.category),
+                        recipe: r,
+                      );
+                    }).toList();
+
+                    final availableCount = items
+                        .where((e) => e.total > 0 && e.owned >= e.total)
+                        .length;
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (_selected == 'Все')
+                          _AvailableCount(count: availableCount),
+                        if (_selected == 'Все') const SizedBox(height: 24),
+                        _RecipeGrid(
+                          selectedCategory: _selected,
+                          onlyAvailable: _selected == 'Все',
+                          items: items,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               const SizedBox(height: 24),
               // Info chips
@@ -254,23 +283,23 @@ class _FeaturedRecipeCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 16),
-  // Right side: image
-  Container(
-    width: 140,
-    height: 120,
-    decoration: BoxDecoration(
-      color: const Color(0x332D2D2D),
-      borderRadius: BorderRadius.circular(24),
-    ),
-    child: Center(
-      child: Image.asset(
-        'assets/images/mock.jpg',
-        width: 120,
-        height: 120,
-        fit: BoxFit.cover,
-      ),
-    ),
-  ),
+          // Right side: image
+          Container(
+            width: 140,
+            height: 120,
+            decoration: BoxDecoration(
+              color: const Color(0x332D2D2D),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Center(
+              child: Image.asset(
+                'assets/images/mock.jpg',
+                width: 120,
+                height: 120,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -281,17 +310,20 @@ class _RecipeGrid extends StatelessWidget {
   final String selectedCategory;
   final bool onlyAvailable;
   final List<_RecipeItem> items;
-  const _RecipeGrid({required this.selectedCategory, required this.onlyAvailable, required this.items});
+  const _RecipeGrid(
+      {required this.selectedCategory,
+      required this.onlyAvailable,
+      required this.items});
 
   @override
   Widget build(BuildContext context) {
-  final all = items;
+    final all = items;
 
     final base = selectedCategory == 'Все'
         ? all
         : all.where((e) => e.category == selectedCategory).toList();
     final filtered = onlyAvailable
-        ? base.where((e) => e.owned >= e.total).toList()
+        ? base.where((e) => e.total > 0 && e.owned >= e.total).toList()
         : base;
 
     // Рисуем по двум колонкам c равными отступами между рядами
@@ -302,8 +334,9 @@ class _RecipeGrid extends StatelessWidget {
       children.add(
         _RecipeRow(
           left: _buildCard(context, left),
-          right:
-              right != null ? _buildCard(context, right) : const SizedBox.shrink(),
+          right: right != null
+              ? _buildCard(context, right)
+              : const SizedBox.shrink(),
         ),
       );
       if (i + 2 < filtered.length) {
@@ -362,17 +395,13 @@ class _RecipeItem {
 }
 
 class _AvailableCount extends StatelessWidget {
-  final String selected;
-  const _AvailableCount({required this.selected});
+  final int count;
+  const _AvailableCount({required this.count});
 
   @override
   Widget build(BuildContext context) {
-    final Map<String, int> counts = {
-      'Все': 2,
-    };
-    final value = counts[selected] ?? 0;
     return Text(
-      '$value доступных рецептов',
+      '$count доступных рецептов',
       style: const TextStyle(
         color: Color(0xFFBBBCBC),
         fontSize: 24,
@@ -404,10 +433,28 @@ List<Ingredient> _parseIngredients(String raw) {
 
   // Часто встречающиеся единицы измерения
   final unitCandidates = <String>{
-    'гр', 'кг', 'мг', 'мл', 'л', 'шт',
-    'ст.л.', 'ч.л.', 'ст. л.', 'ч. л.',
-    'стакан', 'чашка', 'пучок', 'щепотка', 'долька', 'головка', 'пакет', 'пакетик',
-    'ломтик', 'кусок', 'капля', 'по вкусу',
+    'гр',
+    'кг',
+    'мг',
+    'мл',
+    'л',
+    'шт',
+    'ст.л.',
+    'ч.л.',
+    'ст. л.',
+    'ч. л.',
+    'стакан',
+    'чашка',
+    'пучок',
+    'щепотка',
+    'долька',
+    'головка',
+    'пакет',
+    'пакетик',
+    'ломтик',
+    'кусок',
+    'капля',
+    'по вкусу',
   };
 
   final List<Ingredient> res = [];
@@ -449,7 +496,8 @@ List<Ingredient> _parseIngredients(String raw) {
       name = name.replaceFirst(qty, '');
     }
     if (unit.isNotEmpty) {
-      name = name.replaceFirst(RegExp(RegExp.escape(unit), caseSensitive: false), '');
+      name = name.replaceFirst(
+          RegExp(RegExp.escape(unit), caseSensitive: false), '');
     }
     name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
 
@@ -468,7 +516,8 @@ List<Ingredient> _parseIngredients(String raw) {
 List<String> _parseSteps(String raw) {
   var s = raw.replaceAll('\r', '');
   s = s.replaceAll('Инструкции:', '');
-  final lines = s.split('\\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
+  final lines =
+      s.split('\\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
   final steps = <String>[];
   for (final l in lines) {
     var t = l;
@@ -544,4 +593,26 @@ class _Category extends StatelessWidget {
       ],
     );
   }
+}
+
+int _countOwned(List<Ingredient> ingredients, List<FridgeItem> fridgeItems) {
+  int owned = 0;
+  for (final ing in ingredients) {
+    final has = fridgeItems.any((f) => _nameMatches(ing.name, f.title));
+    if (has) owned++;
+  }
+  return owned;
+}
+
+String _normalize(String s) {
+  var t = s.toLowerCase();
+  t = t.replaceAll(RegExp(r'[^a-zA-Zа-яА-Я0-9\s]'), '');
+  t = t.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return t;
+}
+
+bool _nameMatches(String a, String b) {
+  final na = _normalize(a);
+  final nb = _normalize(b);
+  return na == nb || na.contains(nb) || nb.contains(na);
 }

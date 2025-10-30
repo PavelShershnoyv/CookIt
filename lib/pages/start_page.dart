@@ -180,20 +180,27 @@ class _Category extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: const Color(0x332D2D2D),
-            borderRadius: BorderRadius.circular(100),
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        final tab = Uri.encodeComponent(label);
+        context.go('/recipes?tab=$tab');
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: const Color(0x332D2D2D),
+              borderRadius: BorderRadius.circular(100),
+            ),
+            child: Image.asset(icon),
           ),
-          child: Image.asset(icon),
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(color: textPrimary)),
-      ],
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: textPrimary)),
+        ],
+      ),
     );
   }
 }

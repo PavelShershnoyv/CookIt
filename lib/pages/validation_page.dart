@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cookit/design/colors.dart';
 import 'package:go_router/go_router.dart';
+import 'package:cookit/data/fridge_store.dart';
 
 class ValidationPage extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -160,7 +161,19 @@ class _ValidationPageState extends State<ValidationPage> {
                             label: 'Продолжить',
                             backgroundColor: const Color(0xFFB3F800),
                             textColor: Colors.black,
-                            onTap: () {},
+                            onTap: () {
+                              // Сохраняем подтверждённые продукты в хранилище холодильника
+                              final itemsToAdd = _items
+                                  .map((e) => FridgeItem(
+                                        title: e.name,
+                                        amount: '—',
+                                        icon: e.icon,
+                                      ))
+                                  .toList();
+                              FridgeStore.instance.addAll(itemsToAdd);
+                              // И переходим на страницу рецептов
+                              context.go('/recipes');
+                            },
                           ),
                         ),
                       ],
