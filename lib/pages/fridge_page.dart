@@ -142,10 +142,8 @@ class _SearchField extends StatelessWidget {
 
 class _ItemData {
   final String title;
-  final String amount;
   final IconData icon;
-  const _ItemData(
-      {required this.title, required this.amount, required this.icon});
+  const _ItemData({required this.title, required this.icon});
 }
 
 class _ItemsGrid extends StatefulWidget {
@@ -168,7 +166,6 @@ class _ItemsGridState extends State<_ItemsGrid> {
           children.add(
             _FridgeItem(
               title: item.title,
-              amount: item.amount,
               icon: item.icon,
               onDelete: () {
                 FridgeStore.instance.removeAt(index);
@@ -205,15 +202,11 @@ class _ItemRow extends StatelessWidget {
 
 class _FridgeItem extends StatelessWidget {
   final String title;
-  final String amount;
   final IconData icon;
   final VoidCallback onDelete;
 
   const _FridgeItem(
-      {required this.title,
-      required this.amount,
-      required this.icon,
-      required this.onDelete});
+      {required this.title, required this.icon, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -247,14 +240,7 @@ class _FridgeItem extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  amount,
-                  style: const TextStyle(
-                    color: Color(0xFFDADADA),
-                    fontSize: 14,
-                  ),
-                ),
+                // Количество убрано по требованиям: остаётся только название
               ],
             ),
           ),
