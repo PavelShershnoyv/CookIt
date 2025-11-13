@@ -7,7 +7,7 @@ import 'package:cookit/design/images.dart';
 import 'package:cookit/widgets/recipe_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:cookit/data/recipe.dart';
+import 'package:cookit/data/recipe_summary.dart';
 import 'package:cookit/data/fridge_store.dart';
 
 class RecipesPage extends StatefulWidget {
@@ -22,7 +22,7 @@ class _RecipesPageState extends State<RecipesPage> {
   String _selected = 'Все';
   bool _loading = true;
   String? _error;
-  List<Recipe> _recipes = const [];
+  List<RecipeSummary> _recipes = const [];
 
   @override
   void initState() {
@@ -42,14 +42,38 @@ class _RecipesPageState extends State<RecipesPage> {
         _loading = true;
         _error = null;
       });
-      final uri = Uri.parse('http://121.127.37.220:8000/recepts?limit=200');
+      final uri = Uri.parse('http://121.127.37.220:8000/recipes?limit=20');
       final res = await http.get(uri, headers: {'accept': 'application/json'});
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        final List<dynamic> data = jsonDecode(res.body) as List<dynamic>;
+        final decoded = jsonDecode(res.body);
+        // Универсальный разбор: поддерживаем массив и популярные обёртки
+        List<dynamic> data;
+        if (decoded is List) {
+          data = decoded;
+        } else if (decoded is Map<String, dynamic>) {
+          final keys = ['data', 'results', 'recipes', 'items'];
+          List<dynamic>? found;
+          for (final k in keys) {
+            final v = decoded[k];
+            if (v is List) {
+              found = v;
+              break;
+            }
+          }
+          data = found ?? <dynamic>[];
+          // Если ключи не подошли, возможно ответ уже одной сущности
+          if (data.isEmpty) {
+            data = [decoded];
+          }
+        } else {
+          data = <dynamic>[];
+        }
+
         final recipes = data
             .whereType<Map<String, dynamic>>()
-            .map((j) => Recipe.fromJson(j))
+            .map((j) => RecipeSummary.fromJson(j))
             .toList();
+        debugPrint('RecipesPage: fetched ${recipes.length} recipes');
         setState(() {
           _recipes = recipes;
           _loading = false;
@@ -109,34 +133,33 @@ class _RecipesPageState extends State<RecipesPage> {
                   valueListenable: FridgeStore.instance.itemsListenable,
                   builder: (context, fridgeItems, _) {
                     final items = _recipes.map((r) {
-                      final ingredients = _parseIngredients(r.sastav);
-                      final owned = _countOwned(ingredients, fridgeItems);
-                      final total = ingredients.length;
                       return _RecipeItem(
-                        title: r.name,
-                        time: '—',
-                        owned: owned,
-                        total: total,
+                        id: r.id,
+                        title: r.title,
+                        time: r.cooktime ?? '—',
+                        owned: 0,
+                        total: 0,
                         favorite: false,
-                        imageAsset: 'assets/images/mock.jpg',
-                        category: _mapCategory(r.category),
-                        recipe: r,
+                        imageUrl: r.poster,
+                        category: _mapApiCategoryToUi(r.categoryName),
+                        summary: r,
                       );
                     }).toList();
 
-                    final availableCount = items
-                        .where((e) => e.total > 0 && e.owned >= e.total)
-                        .length;
+                    // Диагностика: сколько рецептов по категориям
+                    final Map<String, int> byCat = {};
+                    for (final it in items) {
+                      byCat[it.category] = (byCat[it.category] ?? 0) + 1;
+                    }
+                    debugPrint('RecipesPage: category distribution $byCat');
 
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_selected == 'Все')
-                          _AvailableCount(count: availableCount),
                         if (_selected == 'Все') const SizedBox(height: 24),
                         _RecipeGrid(
                           selectedCategory: _selected,
-                          onlyAvailable: _selected == 'Все',
+                          onlyAvailable: false,
                           items: items,
                         ),
                       ],
@@ -326,6 +349,18 @@ class _RecipeGrid extends StatelessWidget {
         ? base.where((e) => e.total > 0 && e.owned >= e.total).toList()
         : base;
 
+    if (filtered.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(
+          child: Text(
+            'Нет рецептов в этом разделе',
+            style: TextStyle(color: Color(0xFFBBBCBC), fontSize: 16),
+          ),
+        ),
+      );
+    }
+
     // Рисуем по двум колонкам c равными отступами между рядами
     final List<Widget> children = [];
     for (int i = 0; i < filtered.length; i += 2) {
@@ -354,43 +389,46 @@ class _RecipeGrid extends StatelessWidget {
       ingredientsOwned: item.owned,
       ingredientsTotal: item.total,
       favorite: item.favorite,
-      imageAsset: item.imageAsset,
+      imageAsset: null,
+      imageUrl: item.imageUrl,
       onTap: () => context.push('/recipe', extra: _extrasFor(item)),
     );
   }
 
   Map<String, dynamic> _extrasFor(_RecipeItem item) {
-    final ingredients = _parseIngredients(item.recipe.sastav);
-    final steps = _parseSteps(item.recipe.instruction);
     return {
+      'id': item.id,
       'title': item.title,
       'nutrition': '—',
-      'imageAsset': item.imageAsset ?? 'assets/images/mock.jpg',
+      'imageAsset': 'assets/images/mock.jpg',
       'favorite': item.favorite,
-      'ingredients': ingredients,
-      'steps': steps,
+      // ингредиенты и шаги пока не загружаем: страница использует дефолтные
     };
   }
 }
 
 class _RecipeItem {
+  final int id;
   final String title;
   final String time;
   final int owned;
   final int total;
   final bool favorite;
   final String? imageAsset;
+  final String? imageUrl;
   final String category;
-  final Recipe recipe;
+  final RecipeSummary summary;
   _RecipeItem({
+    required this.id,
     required this.title,
     required this.time,
     required this.owned,
     required this.total,
     this.favorite = false,
     this.imageAsset,
+    this.imageUrl,
     required this.category,
-    required this.recipe,
+    required this.summary,
   });
 }
 
@@ -409,125 +447,6 @@ class _AvailableCount extends StatelessWidget {
       ),
     );
   }
-}
-
-String _mapCategory(int? c) {
-  switch (c) {
-    case 2:
-      return 'Завтрак';
-    case 3:
-      return 'Ужин';
-    case 1:
-    default:
-      return 'Обед';
-  }
-}
-
-List<Ingredient> _parseIngredients(String raw) {
-  var s = raw.replaceAll('\r', '');
-  s = s.replaceAll('Ингредиенты:', '');
-  // Убираем текст вида "На X порций:"
-  s = s.replaceAll(RegExp(r'На\s+\d+\s+порции?:'), '');
-  // Парсим строго по запятой
-  final parts = s.split(',').map((p) => p.trim()).where((p) => p.isNotEmpty);
-
-  // Часто встречающиеся единицы измерения
-  final unitCandidates = <String>{
-    'гр',
-    'кг',
-    'мг',
-    'мл',
-    'л',
-    'шт',
-    'ст.л.',
-    'ч.л.',
-    'ст. л.',
-    'ч. л.',
-    'стакан',
-    'чашка',
-    'пучок',
-    'щепотка',
-    'долька',
-    'головка',
-    'пакет',
-    'пакетик',
-    'ломтик',
-    'кусок',
-    'капля',
-    'по вкусу',
-  };
-
-  final List<Ingredient> res = [];
-  for (final original in parts) {
-    var p = original.trim();
-    if (p.isEmpty) continue;
-
-    // Нормализуем разделители
-    p = p.replaceAll(RegExp(r'[–—]'), ' '); // длинные дефисы → пробел
-    p = p.replaceAll(':', ' ');
-
-    // Ищем количество (первая числовая группа)
-    final qtyMatch = RegExp(r'(\d+(?:[.,]\d+)?)').firstMatch(p);
-    final qty = qtyMatch != null ? qtyMatch.group(1)!.trim() : '';
-
-    // Ищем единицу измерения по списку кандидатов (кейсы и точки учитываем)
-    String unit = '';
-    final lower = p.toLowerCase();
-    for (final u in unitCandidates) {
-      if (lower.contains(u)) {
-        unit = u;
-        break;
-      }
-    }
-
-    // Формируем amount по найденным значениям (сохраняем и количеcтво, и единицы)
-    String amount = '';
-    if (unit.isNotEmpty && qty.isNotEmpty) {
-      amount = '$qty $unit';
-    } else if (unit.isNotEmpty) {
-      amount = unit;
-    } else if (qty.isNotEmpty) {
-      amount = qty;
-    }
-
-    // Выделяем название: выкидываем qty и unit из строки
-    var name = p;
-    if (qty.isNotEmpty) {
-      name = name.replaceFirst(qty, '');
-    }
-    if (unit.isNotEmpty) {
-      name = name.replaceFirst(
-          RegExp(RegExp.escape(unit), caseSensitive: false), '');
-    }
-    name = name.replaceAll(RegExp(r'\s+'), ' ').trim();
-
-    // Если имя пустое — оставляем оригинал
-    if (name.isEmpty) name = original.trim();
-
-    res.add(Ingredient(name: _capitalize(name), amount: amount));
-  }
-
-  if (res.isEmpty) {
-    res.add(const Ingredient(name: 'Ингредиенты не указаны', amount: ''));
-  }
-  return res;
-}
-
-List<String> _parseSteps(String raw) {
-  var s = raw.replaceAll('\r', '');
-  s = s.replaceAll('Инструкции:', '');
-  final lines =
-      s.split('\\n').map((l) => l.trim()).where((l) => l.isNotEmpty).toList();
-  final steps = <String>[];
-  for (final l in lines) {
-    var t = l;
-    t = t.replaceFirst(RegExp(r'^\d+\.?\s*'), '');
-    if (t.isNotEmpty) steps.add(_capitalize(t));
-  }
-  if (steps.isEmpty) {
-    steps.add('Инструкция не указана');
-  }
-  return steps;
 }
 
 String _capitalize(String s) {
@@ -615,4 +534,24 @@ bool _nameMatches(String a, String b) {
   final na = _normalize(a);
   final nb = _normalize(b);
   return na == nb || na.contains(nb) || nb.contains(na);
+}
+
+String _mapApiCategoryToUi(String? name) {
+  final n = (name ?? '').toLowerCase().trim();
+  if (n.isEmpty) return 'Все';
+  // Русские и английские варианты на всякий случай
+  if (n.contains('завтрак') || n.contains('breakfast') || n.contains('утро')) {
+    return 'Завтрак';
+  }
+  if (n.contains('обед') || n.contains('lunch')) {
+    return 'Обед';
+  }
+  if (n.contains('ужин') || n.contains('dinner') || n.contains('вечер')) {
+    return 'Ужин';
+  }
+  if (n.contains('десерт') || n.contains('dessert') || n.contains('слад')) {
+    return 'Десерт';
+  }
+  // Если категория другая — показываем в «Все»
+  return 'Все';
 }

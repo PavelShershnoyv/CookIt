@@ -9,6 +9,7 @@ class RecipeCard extends StatelessWidget {
   final int ingredientsTotal;
   final bool favorite;
   final String? imageAsset;
+  final String? imageUrl;
   final VoidCallback? onTap;
 
   const RecipeCard({
@@ -19,6 +20,7 @@ class RecipeCard extends StatelessWidget {
     required this.ingredientsTotal,
     this.favorite = false,
     this.imageAsset,
+    this.imageUrl,
     this.onTap,
   });
 
@@ -35,16 +37,23 @@ class RecipeCard extends StatelessWidget {
               Container(
                 height: 150,
                 decoration: BoxDecoration(
-                  color: imageAsset == null ? textPrimary : null,
+                  color: (imageAsset == null && imageUrl == null)
+                      ? textPrimary
+                      : null,
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(radius30),
                       topRight: Radius.circular(radius30)),
-                  image: imageAsset != null
+                  image: imageUrl != null
                       ? DecorationImage(
-                          image: AssetImage(imageAsset!),
+                          image: NetworkImage(imageUrl!),
                           fit: BoxFit.cover,
                         )
-                      : null,
+                      : imageAsset != null
+                          ? DecorationImage(
+                              image: AssetImage(imageAsset!),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
                 ),
               ),
               Positioned(
