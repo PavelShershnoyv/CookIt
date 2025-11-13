@@ -29,6 +29,9 @@ class _RecipesPageState extends State<RecipesPage> {
   late final TextEditingController _recipesSearchController;
   late final ScrollController _scrollController;
   int _pageSize = 30;
+  // Синхронизация c бэком: основной список по эндпоинту /recipes/all
+  // Используем лимит 20 по умолчанию для начальной загрузки
+  int get _defaultAllLimit => 30;
   int _offset = 0;
   bool _fetchingMore = false;
   bool _hasMore = true;
@@ -141,6 +144,95 @@ class _RecipesPageState extends State<RecipesPage> {
       _isServerSearch = true;
       _searchDebounce = Timer(const Duration(milliseconds: 300), () {
         unawaited(_searchRecipesPaged(q));
+      });
+    }
+  }
+
+  Future<void> _fetchAvailableByIngredients() async {
+    try {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _recipes = const [];
+        _ingredientNamesById.clear();
+        _offset = 0;
+        _hasMore = false; // выдача по ингредиентам без пагинации
+        _isServerSearch = true; // считаем это серверным поиском
+      });
+
+      final fridgeItems = FridgeStore.instance.items;
+      final names = fridgeItems
+          .map((e) => e.title.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
+      if (names.isEmpty) {
+        setState(() {
+          _recipes = const [];
+          _loading = false;
+        });
+        return;
+      }
+
+      final base =
+          Uri.parse('http://121.127.37.220:8000/recipes/search/by-ingredients');
+      final uri = base.replace(queryParameters: {'limit': '20'});
+      final body = jsonEncode({
+        'ingredients': names.map((n) => {'name': n}).toList(),
+      });
+      debugPrint('RecipesPage: available POST $uri body=$body');
+      final res = await http.post(
+        uri,
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+        body: body,
+      );
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final decoded = jsonDecode(res.body);
+        List<dynamic> data;
+        if (decoded is List) {
+          data = decoded;
+        } else if (decoded is Map<String, dynamic>) {
+          final keys = ['data', 'results', 'recipes', 'items'];
+          List<dynamic>? found;
+          for (final k in keys) {
+            final v = decoded[k];
+            if (v is List) {
+              found = v;
+              break;
+            }
+          }
+          data = found ?? <dynamic>[];
+          if (data.isEmpty) {
+            data = [decoded];
+          }
+        } else {
+          data = <dynamic>[];
+        }
+
+        final recipes = data
+            .whereType<Map<String, dynamic>>()
+            .map((j) => RecipeSummary.fromJson(j))
+            .toList();
+        debugPrint(
+            'RecipesPage: available results ${recipes.length} (fridge names=${names.length})');
+        setState(() {
+          _recipes = recipes;
+          _loading = false;
+          _offset = recipes.length;
+          _hasMore = false;
+        });
+        // Временная логика: не запрашиваем дополнительные данные по ингредиентам
+        // для раздела «Доступные», чтобы избежать «У вас X/0».
+      } else {
+        throw Exception('HTTP ${res.statusCode}: ${res.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
       });
     }
   }
@@ -289,13 +381,13 @@ class _RecipesPageState extends State<RecipesPage> {
         _offset = 0;
         _hasMore = true;
       });
-      final base = Uri.parse('http://121.127.37.220:8000/recipes');
+      final base = Uri.parse('http://121.127.37.220:8000/recipes/all');
       final uri = base.replace(
         queryParameters: {
-          'limit': '$_pageSize',
+          'limit': '${_defaultAllLimit}',
         },
       );
-      debugPrint('RecipesPage: initial GET $uri');
+      debugPrint('RecipesPage: initial GET(all) $uri');
       final res = await http.get(uri, headers: {'accept': 'application/json'});
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final decoded = jsonDecode(res.body);
@@ -331,7 +423,7 @@ class _RecipesPageState extends State<RecipesPage> {
           _recipes = recipes;
           _loading = false;
           _offset = recipes.length;
-          _hasMore = recipes.length >= _pageSize;
+          _hasMore = recipes.length >= _defaultAllLimit;
         });
         // Не подтягиваем подробности здесь, чтобы избежать лишних запросов.
       } else {
@@ -353,14 +445,14 @@ class _RecipesPageState extends State<RecipesPage> {
     try {
       // Пагинация: пытаемся использовать offset; если бэк игнорирует,
       // мы всё равно добавим только новые рецепты по id.
-      final base = Uri.parse('http://121.127.37.220:8000/recipes');
-      final requestedLimit = _offset + _pageSize;
+      final base = Uri.parse('http://121.127.37.220:8000/recipes/all');
+      final requestedLimit = _offset + _defaultAllLimit;
       final uri = base.replace(
         queryParameters: {
           'limit': '$requestedLimit',
         },
       );
-      debugPrint('RecipesPage: load-more GET $uri');
+      debugPrint('RecipesPage: load-more GET(all) $uri');
       final res = await http.get(uri, headers: {'accept': 'application/json'});
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final decoded = jsonDecode(res.body);
@@ -452,7 +544,18 @@ class _RecipesPageState extends State<RecipesPage> {
               // Filters row (перемещено под заголовок)
               _Filters(
                 selected: _selected,
-                onSelected: (value) => setState(() => _selected = value),
+                onSelected: (value) {
+                  setState(() {
+                    _selected = value;
+                    _error = null;
+                    _fetchingMore = false;
+                  });
+                  if (value == 'Доступные') {
+                    unawaited(_fetchAvailableByIngredients());
+                  } else if (value == 'Все') {
+                    unawaited(_fetchRecipes());
+                  }
+                },
               ),
               const SizedBox(height: 16),
               if (_selected == 'Все')
@@ -480,7 +583,9 @@ class _RecipesPageState extends State<RecipesPage> {
                   builder: (context, fridgeItems, _) {
                     final items = _recipes.map((r) {
                       final names = _ingredientNamesById[r.id] ?? const [];
-                      final owned = _countOwnedByNames(names, fridgeItems);
+                      final owned = names.isNotEmpty
+                          ? _countOwnedByNames(names, fridgeItems)
+                          : (r.matchCount ?? 0);
                       return _RecipeItem(
                         id: r.id,
                         title: r.title,
@@ -703,11 +808,16 @@ class _RecipeGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     final all = items;
 
-    final base = selectedCategory == 'Все'
+    // Для «Доступные» не фильтруем по категории — используем весь список
+    final base = (selectedCategory == 'Все' || selectedCategory == 'Доступные')
         ? all
         : all.where((e) => e.category == selectedCategory).toList();
     final filtered = onlyAvailable
-        ? base.where((e) => e.total > 0 && e.owned >= e.total).toList()
+        ? base
+            .where((e) =>
+                (e.total > 0 && e.owned >= e.total) ||
+                (e.total == 0 && (e.summary.matchCount ?? 0) > 0))
+            .toList()
         : base;
 
     final q = _normalize(query);
@@ -757,7 +867,7 @@ class _RecipeGrid extends StatelessWidget {
       favorite: item.favorite,
       imageAsset: null,
       imageUrl: item.imageUrl,
-      showIngredientsBadge: selectedCategory == 'Доступные',
+      showIngredientsBadge: selectedCategory == 'Заменить на Доступные',
       onTap: () => context.push('/recipe', extra: _extrasFor(item)),
     );
   }

@@ -8,6 +8,8 @@ class RecipeSummary {
   final String? cooktime;
   final bool? vegan;
   final String? createdAt;
+  final int? matchCount;
+  final List<String> matchedIngredients;
 
   const RecipeSummary({
     required this.id,
@@ -19,6 +21,8 @@ class RecipeSummary {
     this.cooktime,
     this.vegan,
     this.createdAt,
+    this.matchCount,
+    this.matchedIngredients = const [],
   });
 
   factory RecipeSummary.fromJson(Map<String, dynamic> json) {
@@ -32,6 +36,13 @@ class RecipeSummary {
       cooktime: (json['cooktime'] as String?)?.trim(),
       vegan: json['vegan'] as bool?,
       createdAt: (json['created_at'] as String?)?.trim(),
+      matchCount: (json['match_count'] as num?)?.toInt(),
+      matchedIngredients: ((json['matched_ingredients'] as List?)
+              ?.whereType<String>()
+              .map((e) => e.trim())
+              .where((e) => e.isNotEmpty)
+              .toList()) ??
+          const [],
     );
   }
 }

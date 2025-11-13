@@ -39,9 +39,9 @@ class RecipeCard extends StatelessWidget {
               Container(
                 height: 150,
                 decoration: BoxDecoration(
-                  color: (imageAsset == null && imageUrl == null)
-                      ? textPrimary
-                      : null,
+                  // Белый фон под изображением: если картинка не загрузится,
+                  // будет белый блок.
+                  color: Colors.white,
                   borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(radius30),
                       topRight: Radius.circular(radius30)),
