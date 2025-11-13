@@ -27,6 +27,11 @@ class _RecipesPageState extends State<RecipesPage> {
   final Map<int, List<String>> _ingredientNamesById = {};
   String _query = '';
   late final TextEditingController _recipesSearchController;
+  late final ScrollController _scrollController;
+  int _pageSize = 30;
+  int _offset = 0;
+  bool _fetchingMore = false;
+  bool _hasMore = true;
 
   @override
   void initState() {
@@ -38,12 +43,16 @@ class _RecipesPageState extends State<RecipesPage> {
       _selected = init;
     }
     _recipesSearchController = TextEditingController(text: _query);
+    _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
     _fetchRecipes();
   }
 
   @override
   void dispose() {
     _recipesSearchController.dispose();
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -101,13 +110,32 @@ class _RecipesPageState extends State<RecipesPage> {
     return const [];
   }
 
+  void _onScroll() {
+    if (!_hasMore || _fetchingMore) return;
+    if (!_scrollController.hasClients) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 200) {
+      unawaited(_loadMoreRecipes());
+    }
+  }
+
   Future<void> _fetchRecipes() async {
     try {
       setState(() {
         _loading = true;
         _error = null;
+        _recipes = const [];
+        _ingredientNamesById.clear();
+        _offset = 0;
+        _hasMore = true;
       });
-      final uri = Uri.parse('http://121.127.37.220:8000/recipes?limit=20');
+      final base = Uri.parse('http://121.127.37.220:8000/recipes');
+      final uri = base.replace(
+        queryParameters: {
+          'limit': '$_pageSize',
+        },
+      );
+      debugPrint('RecipesPage: initial GET $uri');
       final res = await http.get(uri, headers: {'accept': 'application/json'});
       if (res.statusCode >= 200 && res.statusCode < 300) {
         final decoded = jsonDecode(res.body);
@@ -138,13 +166,14 @@ class _RecipesPageState extends State<RecipesPage> {
             .whereType<Map<String, dynamic>>()
             .map((j) => RecipeSummary.fromJson(j))
             .toList();
-        debugPrint('RecipesPage: fetched ${recipes.length} recipes');
+        debugPrint('RecipesPage: fetched ${recipes.length} recipes (initial)');
         setState(() {
           _recipes = recipes;
           _loading = false;
+          _offset = recipes.length;
+          _hasMore = recipes.length >= _pageSize;
         });
-        // Параллельно подтянем ингредиенты для оценки доступности
-        unawaited(_fetchIngredientsForSummaries(recipes));
+        // Не подтягиваем подробности здесь, чтобы избежать лишних запросов.
       } else {
         throw Exception('HTTP ${res.statusCode}: ${res.body}');
       }
@@ -156,12 +185,96 @@ class _RecipesPageState extends State<RecipesPage> {
     }
   }
 
+  Future<void> _loadMoreRecipes() async {
+    if (_fetchingMore || !_hasMore) return;
+    setState(() {
+      _fetchingMore = true;
+    });
+    try {
+      // Пагинация: пытаемся использовать offset; если бэк игнорирует,
+      // мы всё равно добавим только новые рецепты по id.
+      final base = Uri.parse('http://121.127.37.220:8000/recipes');
+      final requestedLimit = _offset + _pageSize;
+      final uri = base.replace(
+        queryParameters: {
+          'limit': '$requestedLimit',
+        },
+      );
+      debugPrint('RecipesPage: load-more GET $uri');
+      final res = await http.get(uri, headers: {'accept': 'application/json'});
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final decoded = jsonDecode(res.body);
+        List<dynamic> data;
+        if (decoded is List) {
+          data = decoded;
+        } else if (decoded is Map<String, dynamic>) {
+          final keys = ['data', 'results', 'recipes', 'items'];
+          List<dynamic>? found;
+          for (final k in keys) {
+            final v = decoded[k];
+            if (v is List) {
+              found = v;
+              break;
+            }
+          }
+          data = found ?? <dynamic>[];
+          if (data.isEmpty) {
+            data = [decoded];
+          }
+        } else {
+          data = <dynamic>[];
+        }
+
+        final fetched = data
+            .whereType<Map<String, dynamic>>()
+            .map((j) => RecipeSummary.fromJson(j))
+            .toList();
+        final existingIds = _recipes.map((r) => r.id).toSet();
+        final uniqueNew =
+            fetched.where((r) => !existingIds.contains(r.id)).toList();
+        final previousCount = _recipes.length;
+        debugPrint(
+            'RecipesPage: fetched ${fetched.length}, prev $previousCount, unique new ${uniqueNew.length}');
+        if (uniqueNew.isNotEmpty) {
+          setState(() {
+            _recipes = List.of(_recipes)..addAll(uniqueNew);
+            _offset =
+                fetched.length; // продвигаем "указатель" на новый общий объём
+            _hasMore =
+                fetched.length > previousCount; // если объём не вырос — конец
+          });
+          // Не подтягиваем подробности здесь, чтобы избежать лишних запросов.
+        } else {
+          setState(() {
+            _hasMore = false;
+          });
+        }
+      } else {
+        // В случае ошибки прекращаем попытки догружать
+        setState(() {
+          _hasMore = false;
+        });
+      }
+    } catch (_) {
+      setState(() {
+        _hasMore = false;
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _fetchingMore = false;
+        });
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: background,
       body: SafeArea(
         child: SingleChildScrollView(
+          controller: _scrollController,
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,6 +351,13 @@ class _RecipesPageState extends State<RecipesPage> {
                           items: items,
                           query: _query,
                         ),
+                        if (_fetchingMore) ...[
+                          const SizedBox(height: 16),
+                          const Center(
+                            child: CircularProgressIndicator(
+                                color: Color(0xFFB3F800)),
+                          ),
+                        ],
                       ],
                     );
                   },
