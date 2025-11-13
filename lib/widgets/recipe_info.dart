@@ -47,6 +47,19 @@ class RecipeInfo extends StatelessWidget {
       children: [
         Stack(
           children: [
+            // Белый фон под фотографией: если изображение не загрузится,
+            // будет аккуратный белый блок с теми же скруглениями.
+            Container(
+              height: heroHeight,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(radius30),
+                  topRight: Radius.circular(radius30),
+                ),
+              ),
+            ),
             ClipRRect(
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(radius30),
