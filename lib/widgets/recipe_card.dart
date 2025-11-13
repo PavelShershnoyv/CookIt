@@ -11,6 +11,7 @@ class RecipeCard extends StatelessWidget {
   final String? imageAsset;
   final String? imageUrl;
   final VoidCallback? onTap;
+  final bool showIngredientsBadge;
 
   const RecipeCard({
     super.key,
@@ -22,6 +23,7 @@ class RecipeCard extends StatelessWidget {
     this.imageAsset,
     this.imageUrl,
     this.onTap,
+    this.showIngredientsBadge = true,
   });
 
   @override
@@ -56,22 +58,23 @@ class RecipeCard extends StatelessWidget {
                           : null,
                 ),
               ),
-              Positioned(
-                bottom: 12,
-                left: 12,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: gradientStart,
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    'У вас ${ingredientsOwned}/${ingredientsTotal}',
-                    style: const TextStyle(color: background, fontSize: 12),
+              if (showIngredientsBadge)
+                Positioned(
+                  bottom: 12,
+                  left: 12,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: gradientStart,
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'У вас ${ingredientsOwned}/${ingredientsTotal}',
+                      style: const TextStyle(color: background, fontSize: 12),
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           Container(

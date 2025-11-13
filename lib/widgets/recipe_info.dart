@@ -6,11 +6,13 @@ class Ingredient {
   final String name;
   final String amount;
   final IconData icon;
+  final String? iconAsset;
 
   const Ingredient({
     required this.name,
     required this.amount,
     this.icon = Icons.rice_bowl,
+    this.iconAsset,
   });
 }
 
@@ -18,6 +20,7 @@ class RecipeInfo extends StatelessWidget {
   final String title;
   final String nutrition;
   final String imageAsset;
+  final String? imageUrl;
   final bool favorite;
   final List<Ingredient> ingredients;
   final VoidCallback? onFavoriteTap;
@@ -28,6 +31,7 @@ class RecipeInfo extends StatelessWidget {
     required this.title,
     required this.nutrition,
     required this.imageAsset,
+    this.imageUrl,
     required this.ingredients,
     this.favorite = false,
     this.onFavoriteTap,
@@ -48,12 +52,19 @@ class RecipeInfo extends StatelessWidget {
                 topLeft: Radius.circular(radius30),
                 topRight: Radius.circular(radius30),
               ),
-              child: Image.asset(
-                imageAsset,
-                height: heroHeight,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: (imageUrl != null && imageUrl!.isNotEmpty)
+                  ? Image.network(
+                      imageUrl!,
+                      height: heroHeight,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      imageAsset,
+                      height: heroHeight,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
             ),
             Positioned(
               top: 12,
@@ -186,7 +197,16 @@ class _IngredientRow extends StatelessWidget {
               color: const Color(0x1F000000),
               borderRadius: BorderRadius.circular(100),
             ),
-            child: Icon(ingredient.icon, color: Colors.white, size: 18),
+            child: Center(
+              child: ingredient.iconAsset != null
+                  ? Image.asset(
+                      ingredient.iconAsset!,
+                      width: 18,
+                      height: 18,
+                      fit: BoxFit.contain,
+                    )
+                  : Icon(ingredient.icon, color: Colors.white, size: 18),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

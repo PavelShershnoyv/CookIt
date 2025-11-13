@@ -7,6 +7,7 @@ import 'package:cookit/design/images.dart';
 import 'package:cookit/widgets/recipe_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:async';
 import 'package:cookit/data/recipe_summary.dart';
 import 'package:cookit/data/fridge_store.dart';
 
@@ -23,17 +24,72 @@ class _RecipesPageState extends State<RecipesPage> {
   bool _loading = true;
   String? _error;
   List<RecipeSummary> _recipes = const [];
+  final Map<int, List<String>> _ingredientNamesById = {};
 
   @override
   void initState() {
     super.initState();
     // Инициализируем выбранный фильтр из параметра навигации, если он валиден
-    const allowed = ['Все', 'Завтрак', 'Обед', 'Ужин', 'Десерт'];
+    const allowed = ['Все', 'Доступные', 'Завтрак', 'Обед', 'Ужин', 'Десерт'];
     final init = widget.initialSelected;
     if (init != null && allowed.contains(init)) {
       _selected = init;
     }
     _fetchRecipes();
+  }
+
+  Future<void> _fetchIngredientsForSummaries(
+      List<RecipeSummary> summaries) async {
+    for (final r in summaries) {
+      try {
+        final uri = Uri.parse('http://121.127.37.220:8000/recipes/${r.id}');
+        final res =
+            await http.get(uri, headers: {'accept': 'application/json'});
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          final decoded = jsonDecode(res.body);
+          Map<String, dynamic>? obj;
+          if (decoded is Map<String, dynamic>) {
+            obj = decoded;
+          } else if (decoded is List &&
+              decoded.isNotEmpty &&
+              decoded.first is Map<String, dynamic>) {
+            obj = decoded.first as Map<String, dynamic>;
+          }
+          final names = _extractIngredientNames(obj);
+          if (names.isNotEmpty) {
+            setState(() {
+              _ingredientNamesById[r.id] = names;
+            });
+          }
+        }
+      } catch (_) {
+        // ignore errors per item
+      }
+    }
+  }
+
+  List<String> _extractIngredientNames(Map<String, dynamic>? obj) {
+    if (obj == null) return const [];
+    // Популярные поля для состава
+    final candidates = [
+      obj['ingredients'],
+      obj['sastav'],
+      obj['recept_sostav'],
+    ];
+    for (final v in candidates) {
+      if (v is List) {
+        return v
+            .whereType<String>()
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      }
+      if (v is String) {
+        final parts = v.split(RegExp(r'[;,\n]'));
+        return parts.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+      }
+    }
+    return const [];
   }
 
   Future<void> _fetchRecipes() async {
@@ -78,6 +134,8 @@ class _RecipesPageState extends State<RecipesPage> {
           _recipes = recipes;
           _loading = false;
         });
+        // Параллельно подтянем ингредиенты для оценки доступности
+        unawaited(_fetchIngredientsForSummaries(recipes));
       } else {
         throw Exception('HTTP ${res.statusCode}: ${res.body}');
       }
@@ -133,12 +191,14 @@ class _RecipesPageState extends State<RecipesPage> {
                   valueListenable: FridgeStore.instance.itemsListenable,
                   builder: (context, fridgeItems, _) {
                     final items = _recipes.map((r) {
+                      final names = _ingredientNamesById[r.id] ?? const [];
+                      final owned = _countOwnedByNames(names, fridgeItems);
                       return _RecipeItem(
                         id: r.id,
                         title: r.title,
                         time: r.cooktime ?? '—',
-                        owned: 0,
-                        total: 0,
+                        owned: owned,
+                        total: names.length,
                         favorite: false,
                         imageUrl: r.poster,
                         category: _mapApiCategoryToUi(r.categoryName),
@@ -159,7 +219,7 @@ class _RecipesPageState extends State<RecipesPage> {
                         if (_selected == 'Все') const SizedBox(height: 24),
                         _RecipeGrid(
                           selectedCategory: _selected,
-                          onlyAvailable: false,
+                          onlyAvailable: _selected == 'Доступные',
                           items: items,
                         ),
                       ],
@@ -206,6 +266,8 @@ class _Filters extends StatelessWidget {
       child: Row(
         children: [
           chip('Все'),
+          const SizedBox(width: 12),
+          chip('Доступные'),
           const SizedBox(width: 12),
           chip('Завтрак'),
           const SizedBox(width: 12),
@@ -391,6 +453,7 @@ class _RecipeGrid extends StatelessWidget {
       favorite: item.favorite,
       imageAsset: null,
       imageUrl: item.imageUrl,
+      showIngredientsBadge: selectedCategory == 'Доступные',
       onTap: () => context.push('/recipe', extra: _extrasFor(item)),
     );
   }
@@ -534,6 +597,15 @@ bool _nameMatches(String a, String b) {
   final na = _normalize(a);
   final nb = _normalize(b);
   return na == nb || na.contains(nb) || nb.contains(na);
+}
+
+int _countOwnedByNames(List<String> names, List<FridgeItem> fridgeItems) {
+  int owned = 0;
+  for (final n in names) {
+    final has = fridgeItems.any((f) => _nameMatches(n, f.title));
+    if (has) owned++;
+  }
+  return owned;
 }
 
 String _mapApiCategoryToUi(String? name) {
