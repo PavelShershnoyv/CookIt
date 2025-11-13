@@ -3,6 +3,7 @@ import 'package:cookit/design/colors.dart';
 import 'package:cookit/widgets/nav_panel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cookit/data/fridge_store.dart';
+import 'package:cookit/design/ingredient_icons.dart';
 
 class FridgePage extends StatefulWidget {
   const FridgePage({super.key});
@@ -14,6 +15,7 @@ class FridgePage extends StatefulWidget {
 class _FridgePageState extends State<FridgePage> {
   String _query = '';
   late final TextEditingController _fridgeSearchController;
+  String _selectedFilter = 'Все';
 
   @override
   void initState() {
@@ -39,14 +41,17 @@ class _FridgePageState extends State<FridgePage> {
             children: [
               const _Title(),
               const SizedBox(height: 12),
-              const _FiltersRow(),
+              _FiltersRow(
+                selected: _selectedFilter,
+                onSelect: (label) => setState(() => _selectedFilter = label),
+              ),
               const SizedBox(height: 16),
               _SearchField(
                 controller: _fridgeSearchController,
                 onChanged: (v) => setState(() => _query = v),
               ),
               const SizedBox(height: 24),
-              _ItemsGrid(query: _query),
+              _ItemsGrid(query: _query, filter: _selectedFilter),
             ],
           ),
         ),
@@ -84,23 +89,26 @@ class _Title extends StatelessWidget {
 }
 
 class _FiltersRow extends StatelessWidget {
-  const _FiltersRow();
+  final String selected;
+  final ValueChanged<String> onSelect;
+
+  const _FiltersRow({required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: Row(
-        children: const [
-          _FilterChip(label: 'Все', selected: true),
-          SizedBox(width: 8),
-          _FilterChip(label: 'Мясо'),
-          SizedBox(width: 8),
-          _FilterChip(label: 'Фрукты'),
-          SizedBox(width: 8),
-          _FilterChip(label: 'Овощи'),
-          SizedBox(width: 8),
-          _FilterChip(label: 'Молочное'),
+        children: [
+          _FilterChip(label: 'Все', selected: selected == 'Все', onTap: () => onSelect('Все')),
+          const SizedBox(width: 8),
+          _FilterChip(label: 'Мясо', selected: selected == 'Мясо', onTap: () => onSelect('Мясо')),
+          const SizedBox(width: 8),
+          _FilterChip(label: 'Фрукты', selected: selected == 'Фрукты', onTap: () => onSelect('Фрукты')),
+          const SizedBox(width: 8),
+          _FilterChip(label: 'Овощи', selected: selected == 'Овощи', onTap: () => onSelect('Овощи')),
+          const SizedBox(width: 8),
+          _FilterChip(label: 'Молочное', selected: selected == 'Молочное', onTap: () => onSelect('Молочное')),
         ],
       ),
     );
@@ -110,12 +118,15 @@ class _FiltersRow extends StatelessWidget {
 class _FilterChip extends StatelessWidget {
   final String label;
   final bool selected;
+  final VoidCallback? onTap;
 
-  const _FilterChip({required this.label, this.selected = false});
+  const _FilterChip({required this.label, this.selected = false, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: selected ? const Color(0xFFB3F800) : const Color(0x1F000000),
@@ -129,6 +140,7 @@ class _FilterChip extends StatelessWidget {
           fontWeight: FontWeight.w400,
         ),
       ),
+    ),
     );
   }
 }
@@ -186,7 +198,8 @@ class _ItemData {
 
 class _ItemsGrid extends StatefulWidget {
   final String query;
-  const _ItemsGrid({this.query = ''});
+  final String filter;
+  const _ItemsGrid({this.query = '', this.filter = 'Все'});
 
   @override
   State<_ItemsGrid> createState() => _ItemsGridState();
@@ -199,9 +212,16 @@ class _ItemsGridState extends State<_ItemsGrid> {
       valueListenable: FridgeStore.instance.itemsListenable,
       builder: (context, items, _) {
         final q = _normalize(widget.query);
-        final filtered = q.isEmpty
+        List<FridgeItem> filtered = q.isEmpty
             ? items
             : items.where((i) => _matchesByWordPrefix(i.title, q)).toList();
+
+        if (widget.filter != 'Все') {
+          filtered = filtered.where((i) {
+            final cat = _categoryForItem(i);
+            return cat == widget.filter;
+          }).toList();
+        }
         final List<Widget> children = [];
         for (int i = 0; i < filtered.length; i++) {
           final item = filtered[i];
@@ -248,6 +268,19 @@ bool _matchesByWordPrefix(String title, String query) {
     if (!hasToken) return false;
   }
   return true;
+}
+
+String? _categoryForItem(FridgeItem item) {
+  // Сначала пытаемся определить по сохранённому ассету
+  final a = item.iconAsset;
+  if (a != null) {
+    if (a.endsWith('/meet.png')) return 'Мясо';
+    if (a.endsWith('/apple.png')) return 'Фрукты';
+    if (a.endsWith('/carrot.png')) return 'Овощи';
+    if (a.endsWith('/milk.png')) return 'Молочное';
+  }
+  // Иначе — по названию через общий маппинг
+  return IngredientIcons.categoryForName(item.title);
 }
 
 class _ItemRow extends StatelessWidget {

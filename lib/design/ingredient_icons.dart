@@ -19,7 +19,7 @@ class IngredientIcons {
     }
     // рыба -> fish
     if (s.contains('рыб') || s.contains('лосос') || s.contains('тунец') || s.contains('хек') || s.contains('сельд') ||
-        s.contains('минтай') || s.contains('семг')) {
+        s.contains('минтай') || s.contains('семг') || s.contains('скумбр')) {
       return 'assets/images/fish.png';
     }
     // молочка -> milk
@@ -32,11 +32,11 @@ class IngredientIcons {
       return 'assets/images/eggs.png';
     }
     // масло -> oil
-    if (s.contains('масло') || s.contains('оливков') || s.contains('подсолнеч')) {
+    if (s.contains('масло') || s.contains('оливков') || s.contains('подсолнеч') || s.contains('водк')) {
       return 'assets/images/oil.png';
     }
     // фрукты/ягоды -> apple
-    if (s.contains('яблок') || s.contains('банан') || s.contains('апельсин') || s.contains('лимон') ||
+    if (s.contains('яблок') || s.contains('банан') || s.contains('апельсин') || s.contains('лимон') || s.contains('лайм') ||
         s.contains('груш') || s.contains('персик') || s.contains('виноград') || s.contains('киви') ||
         s.contains('малина') || s.contains('ягод') || s.contains('клубник') || s.contains('черник') || s.contains('голубик') || s.contains('брусник') || s.contains('клюкв') || s.contains('ежевик') || s.contains('смородин')) {
       return 'assets/images/apple.png';
@@ -44,12 +44,12 @@ class IngredientIcons {
     // овощи/зелень -> carrot
     if (s.contains('капуст') || s.contains('огур') || s.contains('лук') || s.contains('помидор') || s.contains('томат') ||
         s.contains('картоф') || s.contains('морков') || s.contains('перец') || s.contains('кабач') || s.contains('баклаж') ||
-        s.contains('свекл') || s.contains('укроп') || s.contains('петруш') || s.contains('зелень')) {
+        s.contains('свекл') || s.contains('укроп') || s.contains('петруш') || s.contains('зелень') || s.contains('шпинат')) {
       return 'assets/images/carrot.png';
     }
     // специи -> salt
     if (s.contains('соль') || s.contains('перец') || s.contains('сахар') || s.contains('разрыхл') || s.contains('спец') || s.contains('карри') || s.contains('паприк') ||
-        s.contains('тимьян') || s.contains('тмин') || s.contains('кориандр') || s.contains('базилик')) {
+        s.contains('тимьян') || s.contains('тмин') || s.contains('кориандр') || s.contains('базилик') || s.contains('сода') || s.contains('корица')) {
       return 'assets/images/salt.png';
     }
     // соусы/джемы -> sauces
@@ -62,6 +62,18 @@ class IngredientIcons {
         s.contains('творог')) {
       return 'assets/images/cheese.png';
     }
+    return null;
+  }
+
+  /// Определение пользовательской категории для фильтров холодильника
+  /// Возвращает одну из: 'Мясо', 'Фрукты', 'Овощи', 'Молочное', либо null
+  static String? categoryForName(String name) {
+    final asset = iconAssetForName(name);
+    if (asset == null) return null;
+    if (asset.endsWith('/meet.png')) return 'Мясо';
+    if (asset.endsWith('/apple.png')) return 'Фрукты';
+    if (asset.endsWith('/carrot.png')) return 'Овощи';
+    if (asset.endsWith('/milk.png')) return 'Молочное';
     return null;
   }
 
