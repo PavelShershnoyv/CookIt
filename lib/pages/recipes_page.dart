@@ -32,6 +32,9 @@ class _RecipesPageState extends State<RecipesPage> {
   int _offset = 0;
   bool _fetchingMore = false;
   bool _hasMore = true;
+  Timer? _searchDebounce;
+  bool _isServerSearch = false;
+  int _searchSeq = 0;
 
   @override
   void initState() {
@@ -53,6 +56,7 @@ class _RecipesPageState extends State<RecipesPage> {
     _recipesSearchController.dispose();
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
+    _searchDebounce?.cancel();
     super.dispose();
   }
 
@@ -111,11 +115,163 @@ class _RecipesPageState extends State<RecipesPage> {
   }
 
   void _onScroll() {
+    // Во время серверного поиска не догружаем пагинацию
+    if (_isServerSearch) return;
     if (!_hasMore || _fetchingMore) return;
     if (!_scrollController.hasClients) return;
     final pos = _scrollController.position;
     if (pos.pixels >= pos.maxScrollExtent - 200) {
       unawaited(_loadMoreRecipes());
+    }
+  }
+
+  void _handleQueryChanged(String v) {
+    setState(() {
+      _query = v;
+    });
+    _searchDebounce?.cancel();
+    final q = v.trim();
+    if (q.isEmpty || q.length < 2) {
+      _isServerSearch = false;
+      // Небольшой дебаунс, чтобы не дёргать загрузку при очистке
+      _searchDebounce = Timer(const Duration(milliseconds: 200), () {
+        _fetchRecipes();
+      });
+    } else {
+      _isServerSearch = true;
+      _searchDebounce = Timer(const Duration(milliseconds: 300), () {
+        unawaited(_searchRecipesPaged(q));
+      });
+    }
+  }
+
+  Future<void> _searchRecipesPaged(String q) async {
+    final mySeq = ++_searchSeq;
+    try {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _hasMore = false; // при серверном поиске пагинация отключена
+        _recipes = const [];
+        _offset = 0;
+      });
+      final encoded = Uri.encodeComponent(q);
+      final base = Uri.parse('http://121.127.37.220:8000/recipes/search/$encoded');
+      // 5 последовательных запросов: 3000, 6000, 9000, 12000, 15000
+      for (int i = 1; i <= 5; i++) {
+        if (!mounted || mySeq != _searchSeq) break; // отмена, если запрос устарел
+        final limit = i * 3000;
+        final uri = base.replace(queryParameters: {'limit': '$limit'});
+        debugPrint('RecipesPage: search GET $uri');
+        if (i > 1) {
+          setState(() => _fetchingMore = true);
+        }
+        final res = await http.get(uri, headers: {'accept': 'application/json'});
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          final decoded = jsonDecode(res.body);
+          List<dynamic> data;
+          if (decoded is List) {
+            data = decoded;
+          } else if (decoded is Map<String, dynamic>) {
+            final keys = ['data', 'results', 'recipes', 'items'];
+            List<dynamic>? found;
+            for (final k in keys) {
+              final v = decoded[k];
+              if (v is List) {
+                found = v;
+                break;
+              }
+            }
+            data = found ?? <dynamic>[];
+            if (data.isEmpty) {
+              data = [decoded];
+            }
+          } else {
+            data = <dynamic>[];
+          }
+
+          final fetched = data
+              .whereType<Map<String, dynamic>>()
+              .map((j) => RecipeSummary.fromJson(j))
+              .toList();
+          final existingIds = _recipes.map((r) => r.id).toSet();
+          final uniqueNew = fetched.where((r) => !existingIds.contains(r.id)).toList();
+          if (!mounted || mySeq != _searchSeq) break;
+          setState(() {
+            _recipes = List.of(_recipes)..addAll(uniqueNew);
+            _offset = _recipes.length;
+            _loading = false; // снимаем основной лоадер после первого ответа
+            _fetchingMore = false;
+          });
+        } else {
+          throw Exception('HTTP ${res.statusCode}: ${res.body}');
+        }
+      }
+    } catch (e) {
+      if (!mounted || mySeq != _searchSeq) return;
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+        _fetchingMore = false;
+      });
+    }
+  }
+
+  Future<void> _searchRecipes(String q) async {
+    try {
+      setState(() {
+        _loading = true;
+        _error = null;
+        _hasMore = false; // при серверном поиске пагинация отключена
+      });
+      // Кодируем сегмент пути
+      final encoded = Uri.encodeComponent(q);
+      final base =
+          Uri.parse('http://121.127.37.220:8000/recipes/search/$encoded');
+      final uri = base.replace(queryParameters: {'limit': '15000'});
+      debugPrint('RecipesPage: search GET $uri');
+      final res = await http.get(uri, headers: {'accept': 'application/json'});
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        final decoded = jsonDecode(res.body);
+        List<dynamic> data;
+        if (decoded is List) {
+          data = decoded;
+        } else if (decoded is Map<String, dynamic>) {
+          final keys = ['data', 'results', 'recipes', 'items'];
+          List<dynamic>? found;
+          for (final k in keys) {
+            final v = decoded[k];
+            if (v is List) {
+              found = v;
+              break;
+            }
+          }
+          data = found ?? <dynamic>[];
+          if (data.isEmpty) {
+            data = [decoded];
+          }
+        } else {
+          data = <dynamic>[];
+        }
+
+        final recipes = data
+            .whereType<Map<String, dynamic>>()
+            .map((j) => RecipeSummary.fromJson(j))
+            .toList();
+        debugPrint('RecipesPage: search results ${recipes.length}');
+        setState(() {
+          _recipes = recipes;
+          _loading = false;
+          _offset = recipes.length;
+        });
+      } else {
+        throw Exception('HTTP ${res.statusCode}: ${res.body}');
+      }
+    } catch (e) {
+      setState(() {
+        _error = e.toString();
+        _loading = false;
+      });
     }
   }
 
@@ -298,7 +454,7 @@ class _RecipesPageState extends State<RecipesPage> {
               if (_selected == 'Все')
                 _RecipesSearchField(
                   controller: _recipesSearchController,
-                  onChanged: (v) => setState(() => _query = v),
+                  onChanged: _handleQueryChanged,
                 ),
               if (_selected == 'Все') const SizedBox(height: 16),
               // Промо-карточка рецепта только в разделе "Все"
@@ -349,7 +505,8 @@ class _RecipesPageState extends State<RecipesPage> {
                           selectedCategory: _selected,
                           onlyAvailable: _selected == 'Доступные',
                           items: items,
-                          query: _query,
+                          // При серверном поиске не применяем локальную фильтрацию
+                          query: _isServerSearch ? '' : _query,
                         ),
                         if (_fetchingMore) ...[
                           const SizedBox(height: 16),
