@@ -188,39 +188,64 @@ class _RecipeInfoPageState extends State<RecipeInfoPage> {
 
   String? _iconAssetForName(String name) {
     final s = name.toLowerCase();
-    // Базовые категории по ключевым словам
-    if (s.contains('масло') || s.contains('оливков')) {
-      return 'assets/images/ingredients/oil.png';
+    // 11 категорий и соответствующие ассеты из assets/images
+    // мучное -> bread
+    if (s.contains('мука') || s.contains('макарон') || s.contains('спагет') || s.contains('лапш') ||
+        s.contains('тесто') || s.contains('пицц') || s.contains('хлеб') || s.contains('булк') || s.contains('батон') ||
+        s.contains('лаваш') || s.contains('тортиль') || s.contains('дрожж') || s.contains('крахмал')) {
+      return 'assets/images/bread.png';
     }
-    if (s.contains('сметан') || s.contains('молок') || s.contains('сыр') || s.contains('творог')) {
-      return 'assets/images/ingredients/dairy.png';
+    // мясо -> meet (по имени файла, оставляю ваш вариант)
+    if (s.contains('мяс') || s.contains('говядин') || s.contains('свинин') || s.contains('баранин') ||
+        s.contains('куриц') || s.contains('индейк') || s.contains('утк') || s.contains('ветчин') || s.contains('колбас')) {
+      return 'assets/images/meet.png';
     }
-    if (s.contains('капуст') || s.contains('огур') || s.contains('лук') || s.contains('помидор') ||
-        s.contains('картоф') || s.contains('морков') || s.contains('перец ')) {
-      return 'assets/images/ingredients/vegetables.png';
+    // рыба -> fish
+    if (s.contains('рыб') || s.contains('лосос') || s.contains('тунец') || s.contains('хек') || s.contains('сельд') ||
+        s.contains('минтай') || s.contains('семг')) {
+      return 'assets/images/fish.png';
     }
-    if (s.contains('укроп') || s.contains('петруш') || s.contains('зелень')) {
-      return 'assets/images/ingredients/herbs.png';
+    // молочка -> milk
+    if (s.contains('молок') || s.contains('кефир') || s.contains('йогурт') || s.contains('сливк') || s.contains('ряженк') ||
+        s.contains('сметан') || s.contains('морожен')) {
+      return 'assets/images/milk.png';
     }
-    if (s.contains('яблок') || s.contains('банан') || s.contains('апельсин') || s.contains('лимон')) {
-      return 'assets/images/ingredients/fruits.png';
+    // яйца -> eggs
+    if (s.contains('яйц') || s.contains('перепелиные')) {
+      return 'assets/images/eggs.png';
     }
-    if (s.contains('соль')) {
-      return 'assets/images/ingredients/salt.png';
+    // масло -> oil
+    if (s.contains('масло') || s.contains('оливков') || s.contains('подсолнеч')) {
+      return 'assets/images/oil.png';
     }
-    if (s.contains('перец')) {
-      return 'assets/images/ingredients/spices.png';
+    // фрукты -> apple (включая ягоды)
+    if (s.contains('яблок') || s.contains('банан') || s.contains('апельсин') || s.contains('лимон') ||
+        s.contains('груш') || s.contains('персик') || s.contains('виноград') || s.contains('киви') ||
+        s.contains('малина') || s.contains('ягод') || s.contains('клубник') || s.contains('черник') || s.contains('голубик') || s.contains('брусник') || s.contains('клюкв') || s.contains('ежевик') || s.contains('смородин')) {
+      return 'assets/images/apple.png';
     }
-    if (s.contains('сахар')) {
-      return 'assets/images/ingredients/sugar.png';
+    // овощи -> carrot
+    if (s.contains('капуст') || s.contains('огур') || s.contains('лук') || s.contains('помидор') || s.contains('томат') ||
+        s.contains('картоф') || s.contains('морков') || s.contains('перец') || s.contains('кабач') || s.contains('баклаж') ||
+        s.contains('свекл') || s.contains('укроп') || s.contains('петруш') || s.contains('зелень')) {
+      return 'assets/images/carrot.png';
     }
-    if (s.contains('соус') || s.contains('майонез') || s.contains('кетчуп')) {
-      return 'assets/images/ingredients/sauce.png';
+    // специи -> salt (включая соль, перец, сахар, разрыхлитель и прочие специи)
+    if (s.contains('соль') || s.contains('перец') || s.contains('сахар') || s.contains('разрыхл') || s.contains('спец') || s.contains('карри') || s.contains('паприк') ||
+        s.contains('тимьян') || s.contains('тмин') || s.contains('кориандр') || s.contains('базилик')) {
+      return 'assets/images/salt.png';
     }
-    if (s.contains('хлеб') || s.contains('булк') || s.contains('батон')) {
-      return 'assets/images/ingredients/bread.png';
+    // соусы -> sauces
+    if (s.contains('соус') || s.contains('майонез') || s.contains('кетчуп') || s.contains('горчиц') ||
+        s.contains('терияки') || s.contains('барбекю') || s.contains('соев') || s.contains('повидл') || s.contains('джем') || s.contains('варень')) {
+      return 'assets/images/sauces.png';
     }
-    // По умолчанию без ассета — будет показан Material Icon
+    // сырная продукция -> cheese
+    if (s.contains('сыр') || s.contains('моцарел') || s.contains('пармез') || s.contains('брынз') || s.contains('фет') ||
+        s.contains('творог')) {
+      return 'assets/images/cheese.png';
+    }
+    // по умолчанию без ассета — будет показан Material Icon
     return null;
   }
 

@@ -191,8 +191,8 @@ class _IngredientRow extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 32,
-            height: 32,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: const Color(0x1F000000),
               borderRadius: BorderRadius.circular(100),
@@ -201,11 +201,11 @@ class _IngredientRow extends StatelessWidget {
               child: ingredient.iconAsset != null
                   ? Image.asset(
                       ingredient.iconAsset!,
-                      width: 18,
-                      height: 18,
+                      width: 24,
+                      height: 24,
                       fit: BoxFit.contain,
                     )
-                  : Icon(ingredient.icon, color: Colors.white, size: 18),
+                  : Icon(ingredient.icon, color: Colors.white, size: 24),
             ),
           ),
           const SizedBox(width: 12),

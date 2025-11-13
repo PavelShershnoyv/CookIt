@@ -4,8 +4,28 @@ import 'package:cookit/widgets/nav_panel.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cookit/data/fridge_store.dart';
 
-class FridgePage extends StatelessWidget {
+class FridgePage extends StatefulWidget {
   const FridgePage({super.key});
+
+  @override
+  State<FridgePage> createState() => _FridgePageState();
+}
+
+class _FridgePageState extends State<FridgePage> {
+  String _query = '';
+  late final TextEditingController _fridgeSearchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _fridgeSearchController = TextEditingController(text: _query);
+  }
+
+  @override
+  void dispose() {
+    _fridgeSearchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +41,12 @@ class FridgePage extends StatelessWidget {
               const SizedBox(height: 12),
               const _FiltersRow(),
               const SizedBox(height: 16),
-              const _SearchField(),
+              _SearchField(
+                controller: _fridgeSearchController,
+                onChanged: (v) => setState(() => _query = v),
+              ),
               const SizedBox(height: 24),
-              _ItemsGrid(),
+              _ItemsGrid(query: _query),
             ],
           ),
         ),
@@ -111,27 +134,42 @@ class _FilterChip extends StatelessWidget {
 }
 
 class _SearchField extends StatelessWidget {
-  const _SearchField();
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  const _SearchField({required this.controller, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0x1F000000),
         borderRadius: BorderRadius.circular(100),
       ),
       child: Row(
-        children: const [
-          Icon(Icons.search, color: Color(0x80FFFFFF)),
-          SizedBox(width: 8),
-          Text(
-            'Поиск',
-            style: TextStyle(
-              color: Color(0x80FFFFFF),
-              fontSize: 18,
-              fontWeight: FontWeight.w400,
+        children: [
+          const Icon(Icons.search, color: Color(0x80FFFFFF)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              style: const TextStyle(
+                color: Color(0xFFFDFEFF),
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: 'Поиск',
+                hintStyle: TextStyle(
+                  color: Color(0x80FFFFFF),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
             ),
           ),
         ],
@@ -147,7 +185,8 @@ class _ItemData {
 }
 
 class _ItemsGrid extends StatefulWidget {
-  const _ItemsGrid();
+  final String query;
+  const _ItemsGrid({this.query = ''});
 
   @override
   State<_ItemsGrid> createState() => _ItemsGridState();
@@ -159,9 +198,13 @@ class _ItemsGridState extends State<_ItemsGrid> {
     return ValueListenableBuilder<List<FridgeItem>>(
       valueListenable: FridgeStore.instance.itemsListenable,
       builder: (context, items, _) {
+        final q = _normalize(widget.query);
+        final filtered = q.isEmpty
+            ? items
+            : items.where((i) => _matchesByWordPrefix(i.title, q)).toList();
         final List<Widget> children = [];
-        for (int i = 0; i < items.length; i++) {
-          final item = items[i];
+        for (int i = 0; i < filtered.length; i++) {
+          final item = filtered[i];
           final index = i;
           children.add(
             _FridgeItem(
@@ -172,7 +215,7 @@ class _ItemsGridState extends State<_ItemsGrid> {
               },
             ),
           );
-          if (index + 1 < items.length) {
+          if (index + 1 < filtered.length) {
             children.add(const SizedBox(height: 12));
           }
         }
@@ -180,6 +223,30 @@ class _ItemsGridState extends State<_ItemsGrid> {
       },
     );
   }
+}
+
+String _normalize(String s) {
+  var t = s.toLowerCase();
+  t = t.replaceAll(RegExp(r'[^a-zA-Zа-яА-Я0-9\s]'), '');
+  t = t.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return t;
+}
+
+// Совпадение по префиксу слова: хотя бы одно слово в названии
+// начинается с введённой последовательности. Для многословного запроса
+// каждый токен должен совпасть с префиксом какого-либо слова.
+bool _matchesByWordPrefix(String title, String query) {
+  final t = _normalize(title);
+  final q = _normalize(query);
+  if (q.isEmpty) return true;
+  final words = t.split(' ');
+  final tokens = q.split(' ');
+  for (final token in tokens) {
+    if (token.isEmpty) continue;
+    final hasToken = words.any((w) => w.startsWith(token));
+    if (!hasToken) return false;
+  }
+  return true;
 }
 
 class _ItemRow extends StatelessWidget {

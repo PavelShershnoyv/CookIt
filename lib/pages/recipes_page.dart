@@ -25,6 +25,8 @@ class _RecipesPageState extends State<RecipesPage> {
   String? _error;
   List<RecipeSummary> _recipes = const [];
   final Map<int, List<String>> _ingredientNamesById = {};
+  String _query = '';
+  late final TextEditingController _recipesSearchController;
 
   @override
   void initState() {
@@ -35,7 +37,14 @@ class _RecipesPageState extends State<RecipesPage> {
     if (init != null && allowed.contains(init)) {
       _selected = init;
     }
+    _recipesSearchController = TextEditingController(text: _query);
     _fetchRecipes();
+  }
+
+  @override
+  void dispose() {
+    _recipesSearchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchIngredientsForSummaries(
@@ -173,6 +182,12 @@ class _RecipesPageState extends State<RecipesPage> {
                 onSelected: (value) => setState(() => _selected = value),
               ),
               const SizedBox(height: 16),
+              if (_selected == 'Все')
+                _RecipesSearchField(
+                  controller: _recipesSearchController,
+                  onChanged: (v) => setState(() => _query = v),
+                ),
+              if (_selected == 'Все') const SizedBox(height: 16),
               // Промо-карточка рецепта только в разделе "Все"
               if (_selected == 'Все') const _FeaturedRecipeCard(),
               const SizedBox(height: 24),
@@ -221,6 +236,7 @@ class _RecipesPageState extends State<RecipesPage> {
                           selectedCategory: _selected,
                           onlyAvailable: _selected == 'Доступные',
                           items: items,
+                          query: _query,
                         ),
                       ],
                     );
@@ -395,10 +411,12 @@ class _RecipeGrid extends StatelessWidget {
   final String selectedCategory;
   final bool onlyAvailable;
   final List<_RecipeItem> items;
+  final String query;
   const _RecipeGrid(
       {required this.selectedCategory,
       required this.onlyAvailable,
-      required this.items});
+      required this.items,
+      this.query = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -411,7 +429,12 @@ class _RecipeGrid extends StatelessWidget {
         ? base.where((e) => e.total > 0 && e.owned >= e.total).toList()
         : base;
 
-    if (filtered.isEmpty) {
+    final q = _normalize(query);
+    final byQuery = q.isEmpty
+        ? filtered
+        : filtered.where((e) => _matchesByWordPrefix(e.title, q)).toList();
+
+    if (byQuery.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 24),
         child: Center(
@@ -425,9 +448,9 @@ class _RecipeGrid extends StatelessWidget {
 
     // Рисуем по двум колонкам c равными отступами между рядами
     final List<Widget> children = [];
-    for (int i = 0; i < filtered.length; i += 2) {
-      final left = filtered[i];
-      final right = (i + 1 < filtered.length) ? filtered[i + 1] : null;
+    for (int i = 0; i < byQuery.length; i += 2) {
+      final left = byQuery[i];
+      final right = (i + 1 < byQuery.length) ? byQuery[i + 1] : null;
       children.add(
         _RecipeRow(
           left: _buildCard(context, left),
@@ -436,7 +459,7 @@ class _RecipeGrid extends StatelessWidget {
               : const SizedBox.shrink(),
         ),
       );
-      if (i + 2 < filtered.length) {
+      if (i + 2 < byQuery.length) {
         children.add(const SizedBox(height: 16));
       }
     }
@@ -593,6 +616,23 @@ String _normalize(String s) {
   return t;
 }
 
+// Совпадение по префиксу слова: любое слово в названии рецепта
+// начинается с введённой последовательности. Для многословного запроса
+// требуется, чтобы каждый токен запроса совпадал с префиксом какого-либо слова.
+bool _matchesByWordPrefix(String title, String query) {
+  final t = _normalize(title);
+  final q = _normalize(query);
+  if (q.isEmpty) return true;
+  final words = t.split(' ');
+  final tokens = q.split(' ');
+  for (final token in tokens) {
+    if (token.isEmpty) continue;
+    final hasToken = words.any((w) => w.startsWith(token));
+    if (!hasToken) return false;
+  }
+  return true;
+}
+
 bool _nameMatches(String a, String b) {
   final na = _normalize(a);
   final nb = _normalize(b);
@@ -626,4 +666,50 @@ String _mapApiCategoryToUi(String? name) {
   }
   // Если категория другая — показываем в «Все»
   return 'Все';
+}
+
+class _RecipesSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+  const _RecipesSearchField(
+      {required this.controller, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0x1F000000),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.search, color: Color(0x80FFFFFF)),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              onChanged: onChanged,
+              style: const TextStyle(
+                color: Color(0xFFFDFEFF),
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
+              ),
+              decoration: const InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                hintText: 'Поиск рецептов',
+                hintStyle: TextStyle(
+                  color: Color(0x80FFFFFF),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
