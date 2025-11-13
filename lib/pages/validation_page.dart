@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cookit/design/colors.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cookit/data/fridge_store.dart';
+import 'package:cookit/design/ingredient_icons.dart';
 
 class ValidationPage extends StatefulWidget {
   final Map<String, dynamic>? payload;
@@ -23,7 +24,10 @@ class _ValidationPageState extends State<ValidationPage> {
   @override
   void initState() {
     super.initState();
-    final detected = (widget.payload?['detected_ingredients'] as List?)
+    final detected = (widget.payload?['ingredients'] as List?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        (widget.payload?['detected_ingredients'] as List?)
             ?.map((e) => e.toString())
             .toList() ??
         [
@@ -34,7 +38,11 @@ class _ValidationPageState extends State<ValidationPage> {
           'яблоко',
         ];
     _items = detected
-        .map((name) => _Item(_capitalize(name), _iconFor(name)))
+        .map((name) => _Item(
+              _capitalize(name),
+              IngredientIcons.fallbackIconForName(name),
+              IngredientIcons.iconAssetForName(name),
+            ))
         .toList();
   }
 
@@ -43,33 +51,7 @@ class _ValidationPageState extends State<ValidationPage> {
     return s[0].toUpperCase() + s.substring(1);
   }
 
-  IconData _iconFor(String raw) {
-    final name = raw.trim().toLowerCase();
-    switch (name) {
-      case 'яблоко':
-        return Icons.apple;
-      case 'лимон':
-        return Icons.emoji_food_beverage;
-      case 'яйцо':
-        return Icons.egg;
-      case 'молоко':
-        return Icons.local_drink;
-      case 'оливковое масло':
-        return Icons.invert_colors;
-      case 'помидоры':
-      case 'помидор':
-        return Icons.local_pizza;
-      case 'шпинат':
-        return Icons.eco;
-      case 'курица':
-      case 'мясо':
-        return Icons.set_meal;
-      case 'морковь':
-        return Icons.local_florist;
-      default:
-        return Icons.check_circle_outline;
-    }
-  }
+  // Icon fallback handled via IngredientIcons.fallbackIconForName
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +121,7 @@ class _ValidationPageState extends State<ValidationPage> {
                       _ValidationRow(
                         title: _items[i].name,
                         icon: _items[i].icon,
+                        iconAsset: _items[i].iconAsset,
                       ),
                       const SizedBox(height: 12),
                     ],
@@ -168,6 +151,7 @@ class _ValidationPageState extends State<ValidationPage> {
                                         title: e.name,
                                         amount: '—',
                                         icon: e.icon,
+                                        iconAsset: e.iconAsset,
                                       ))
                                   .toList();
                               FridgeStore.instance.addAll(itemsToAdd);
@@ -193,11 +177,13 @@ class _ValidationPageState extends State<ValidationPage> {
 class _ValidationRow extends StatelessWidget {
   final String title;
   final IconData icon;
+  final String? iconAsset;
   
 
   const _ValidationRow({
     required this.title,
     required this.icon,
+    this.iconAsset,
   });
 
   @override
@@ -217,7 +203,14 @@ class _ValidationRow extends StatelessWidget {
               color: const Color(0x332D2D2D),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, color: Colors.white),
+            child: iconAsset != null
+                ? Image.asset(
+                    iconAsset!,
+                    width: 24,
+                    height: 24,
+                    fit: BoxFit.contain,
+                  )
+                : Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -278,5 +271,6 @@ class _ActionButton extends StatelessWidget {
 class _Item {
   final String name;
   final IconData icon;
-  const _Item(this.name, this.icon);
+  final String? iconAsset;
+  const _Item(this.name, this.icon, this.iconAsset);
 }

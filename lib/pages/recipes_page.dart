@@ -156,17 +156,20 @@ class _RecipesPageState extends State<RecipesPage> {
         _offset = 0;
       });
       final encoded = Uri.encodeComponent(q);
-      final base = Uri.parse('http://121.127.37.220:8000/recipes/search/$encoded');
+      final base =
+          Uri.parse('http://121.127.37.220:8000/recipes/search/$encoded');
       // 5 последовательных запросов: 3000, 6000, 9000, 12000, 15000
       for (int i = 1; i <= 5; i++) {
-        if (!mounted || mySeq != _searchSeq) break; // отмена, если запрос устарел
+        if (!mounted || mySeq != _searchSeq)
+          break; // отмена, если запрос устарел
         final limit = i * 3000;
         final uri = base.replace(queryParameters: {'limit': '$limit'});
         debugPrint('RecipesPage: search GET $uri');
         if (i > 1) {
           setState(() => _fetchingMore = true);
         }
-        final res = await http.get(uri, headers: {'accept': 'application/json'});
+        final res =
+            await http.get(uri, headers: {'accept': 'application/json'});
         if (res.statusCode >= 200 && res.statusCode < 300) {
           final decoded = jsonDecode(res.body);
           List<dynamic> data;
@@ -195,7 +198,8 @@ class _RecipesPageState extends State<RecipesPage> {
               .map((j) => RecipeSummary.fromJson(j))
               .toList();
           final existingIds = _recipes.map((r) => r.id).toSet();
-          final uniqueNew = fetched.where((r) => !existingIds.contains(r.id)).toList();
+          final uniqueNew =
+              fetched.where((r) => !existingIds.contains(r.id)).toList();
           if (!mounted || mySeq != _searchSeq) break;
           setState(() {
             _recipes = List.of(_recipes)..addAll(uniqueNew);

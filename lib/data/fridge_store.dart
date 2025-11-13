@@ -2,26 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+// Общая логика иконок теперь определяется на уровне страниц (IngredientIcons)
 
 class FridgeItem {
   final String title;
   final String amount;
   final IconData icon;
-  FridgeItem({required this.title, required this.amount, required this.icon});
+  final String? iconAsset;
+  FridgeItem({required this.title, required this.amount, required this.icon, this.iconAsset});
 }
 
 class FridgeStore {
   FridgeStore._internal() {
-    // Инициализируем стартовым набором, как было в FridgePage
-    _itemsNotifier.value = [
-      FridgeItem(title: 'Молоко', amount: '1 л', icon: Icons.local_drink),
-      FridgeItem(title: 'Оливковое масло', amount: '500 мл', icon: Icons.invert_colors),
-      FridgeItem(title: 'Яйцо', amount: '10 шт', icon: Icons.emoji_food_beverage),
-      FridgeItem(title: 'Яблоко', amount: '5 шт', icon: Icons.spa),
-      FridgeItem(title: 'Лимон', amount: '2 шт', icon: Icons.circle),
-      FridgeItem(title: 'Куринное филе', amount: '200 г', icon: Icons.set_meal),
-    ];
-    // Пытаемся загрузить сохранённые данные и заменить стартовые, если они есть
+    // Холодильник по умолчанию пуст. Загружаем сохранённые данные, если они есть.
     _loadFromPrefs();
   }
 
@@ -69,38 +62,11 @@ class FridgeStore {
     _saveToPrefs();
   }
 
-  // Небольшой хелпер для определения иконки по названию
-  IconData iconForName(String raw) {
-    final name = raw.trim().toLowerCase();
-    switch (name) {
-      case 'яблоко':
-        return Icons.apple;
-      case 'лимон':
-        return Icons.emoji_food_beverage;
-      case 'яйцо':
-        return Icons.egg;
-      case 'молоко':
-        return Icons.local_drink;
-      case 'оливковое масло':
-        return Icons.invert_colors;
-      case 'помидоры':
-      case 'помидор':
-        return Icons.local_pizza;
-      case 'шпинат':
-        return Icons.eco;
-      case 'курица':
-      case 'мясо':
-      case 'куринное филе':
-        return Icons.set_meal;
-      case 'морковь':
-        return Icons.local_florist;
-      default:
-        return Icons.check_circle_outline;
-    }
-  }
+  // Локальная маппинга иконок по названию больше не требуется.
 
   // --- Persistence ---
-  static const String _prefsKey = 'fridge_items_v1';
+  // Переходим на новый ключ, чтобы игнорировать старые сохранённые данные
+  static const String _prefsKey = 'fridge_items_v2';
 
   Future<void> _loadFromPrefs() async {
     try {
@@ -113,15 +79,17 @@ class FridgeStore {
         final title = (m['title'] as String?) ?? '';
         final amount = (m['amount'] as String?) ?? '—';
         final codePoint = (m['icon'] as int?) ?? Icons.check_circle_outline.codePoint;
+        final iconAsset = m['iconAsset'] as String?;
         return FridgeItem(
           title: title,
           amount: amount,
           icon: IconData(codePoint, fontFamily: 'MaterialIcons'),
+          iconAsset: iconAsset,
         );
       }).toList();
       _itemsNotifier.value = loaded;
     } catch (_) {
-      // Игнорируем ошибки чтения/парсинга, оставляем стартовый набор
+      // Игнорируем ошибки чтения/парсинга, оставляем пустой список
     }
   }
 
@@ -133,6 +101,7 @@ class FridgeStore {
                 'title': e.title,
                 'amount': e.amount,
                 'icon': e.icon.codePoint,
+                'iconAsset': e.iconAsset,
               })
           .toList();
       final jsonStr = jsonEncode(data);

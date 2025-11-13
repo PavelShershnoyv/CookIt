@@ -210,6 +210,7 @@ class _ItemsGridState extends State<_ItemsGrid> {
             _FridgeItem(
               title: item.title,
               icon: item.icon,
+              iconAsset: item.iconAsset,
               onDelete: () {
                 FridgeStore.instance.removeAt(index);
               },
@@ -270,10 +271,11 @@ class _ItemRow extends StatelessWidget {
 class _FridgeItem extends StatelessWidget {
   final String title;
   final IconData icon;
+  final String? iconAsset;
   final VoidCallback onDelete;
 
   const _FridgeItem(
-      {required this.title, required this.icon, required this.onDelete});
+      {required this.title, required this.icon, this.iconAsset, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -286,13 +288,15 @@ class _FridgeItem extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: const Color(0x332D2D2D),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
             ),
-            child: Icon(icon, color: Colors.white),
+            child: iconAsset != null
+                ? Image.asset(iconAsset!, width: 24, height: 24, fit: BoxFit.contain)
+                : Icon(icon, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(

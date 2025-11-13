@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+// FridgeStore больше не используется напрямую здесь; ингредиенты сохраняются после валидации
 
 class ScannerPage extends StatefulWidget {
   const ScannerPage({super.key});
@@ -144,7 +145,7 @@ class _ScannerPageState extends State<ScannerPage> {
         final Map<String, dynamic> payload = jsonDecode(response.body) as Map<String, dynamic>;
         if (!mounted) return;
         setState(() => _isUploading = false);
-        // Передаём ответ на /validation
+        // Передаём ответ на страницу валидации для подтверждения/коррекции
         context.go('/validation', extra: payload);
       } else {
         throw Exception('Upload failed: ${response.statusCode} ${response.body}');
@@ -160,6 +161,8 @@ class _ScannerPageState extends State<ScannerPage> {
       );
     }
   }
+
+  // Хелперы для парсинга/иконок перенесены в ValidationPage
 
   @override
   Widget build(BuildContext context) {
